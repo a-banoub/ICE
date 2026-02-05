@@ -1,0 +1,259 @@
+{
+  "data": {
+    "explore_sidebar": {
+      "timeline": {
+        "instructions": [
+          {
+            "type": "TimelineClearCache"
+          },
+          {
+            "type": "TimelineTerminateTimeline",
+            "direction": "Bottom"
+          },
+          {
+            "type": "TimelineAddEntries",
+            "entries": [
+              {
+                "entryId": "trend-2019477271768727552",
+                "sortIndex": "2019477271768727552",
+                "content": {
+                  "entryType": "TimelineTimelineModule",
+                  "__typename": "TimelineTimelineModule",
+                  "items": [
+                    {
+                      "entryId": "trend-2019477271768727552-trend-Poole",
+                      "item": {
+                        "itemContent": {
+                          "itemType": "TimelineTrend",
+                          "__typename": "TimelineTrend",
+                          "name": "Poole",
+                          "trend_url": {
+                            "url": "twitter://search/?query=Poole&src=trend_click&pc=true&vertical=trends",
+                            "urlType": "DeepLink",
+                            "urtEndpointOptions": {
+                              "requestParams": [
+                                {
+                                  "key": "cd",
+                                  "value": "HBgFUG9vbGUAAA=="
+                                }
+                              ]
+                            }
+                          },
+                          "trend_metadata": {
+                            "domain_context": "Sports · Trending",
+                            "url": {
+                              "url": "twitter://search/?query=Poole&src=trend_click&pc=true&vertical=trends",
+                              "urlType": "DeepLink",
+                              "urtEndpointOptions": {
+                                "requestParams": [
+                                  {
+                                    "key": "cd",
+                                    "value": "HBgFUG9vbGUAAA=="
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        "clientEventInfo": {
+                          "component": "unified_events",
+                          "element": "trend",
+                          "details": {
+                            "timelinesDetails": {
+                              "controllerData": "DAACDAAQDAABCgABb5tBjlkAyQoKAAIAAAGcLwyH4AAAAAA="
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "entryId": "trend-2019477271768727552-trend-#WPLFinal",
+                      "item": {
+                        "itemContent": {
+                          "itemType": "TimelineTrend",
+                          "__typename": "TimelineTrend",
+                          "grouped_trends": [
+                            {
+                              "name": "#WPL2026",
+                              "url": {
+                                "url": "twitter://search/?query=%23WPL2026&src=trend_click&pc=true&vertical=trends",
+                                "urlType": "DeepLink",
+                                "urtEndpointOptions": {
+                                  "requestParams": [
+                                    {
+                                      "key": "cd",
+                                      "value": "HBgII1dQTDIwMjYAAA=="
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          ],
+                          "name": "#WPLFinal",
+                          "trend_url": {
+                            "url": "twitter://search/?query=%23WPLFinal&src=trend_click&pc=true&vertical=trends",
+                            "urlType": "DeepLink",
+                            "urtEndpointOptions": {
+                              "requestParams": [
+                                {
+                                  "key": "cd",
+                                  "value": "HBgJI1dQTEZpbmFsAAA="
+                                }
+                              ]
+                            }
+                          },
+                          "trend_metadata": {
+                            "domain_context": "Sports · Trending",
+                            "url": {
+                              "url": "twitter://search/?query=%23WPLFinal&src=trend_click&pc=true&vertical=trends",
+                              "urlType": "DeepLink",
+                              "urtEndpointOptions": {
+                                "requestParams": [
+                                  {
+                                    "key": "cd",
+                                    "value": "HBgJI1dQTEZpbmFsAAA="
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        "clientEventInfo": {
+                          "component": "unified_events",
+                          "element": "trend",
+                          "details": {
+                            "timelinesDetails": {
+                              "controllerData": "DAACDAAQDAABCgABb5tBjlkAyQoKAAIAAAGcLwyH4AAAAAA="
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "entryId": "trend-2019477271768727552-trend-#TeamUSA",
+                      "item": {
+                        "itemContent": {
+                          "itemType": "TimelineTrend",
+                          "__typename": "TimelineTrend",
+                          "name": "#TeamUSA",
+                          "trend_url": {
+                            "url": "twitter://search/?query=%23TeamUSA&src=trend_click&pc=true&vertical=trends",
+                            "urlType": "DeepLink",
+                            "urtEndpointOptions": {
+                              "requestParams": [
+                                {
+                                  "key": "cd",
+                                  "value": "HBgII1RlYW1VU0EAAA=="
+                                }
+                              ]
+                            }
+                          },
+                          "trend_metadata": {
+                            "domain_context": "Trending in United States",
+                            "url": {
+                              "url": "twitter://search/?query=%23TeamUSA&src=trend_click&pc=true&vertical=trends",
+                              "urlType": "DeepLink",
+                              "urtEndpointOptions": {
+                                "requestParams": [
+                                  {
+                                    "key": "cd",
+                                    "value": "HBgII1RlYW1VU0EAAA=="
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        "clientEventInfo": {
+                          "component": "unified_events",
+                          "element": "trend",
+                          "details": {
+                            "timelinesDetails": {
+                              "controllerData": "DAACDAAQDAABCgABb5tBjlkAyQoKAAIAAAGcLwyH4AAAAAA="
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "entryId": "trend-2019477271768727552-trend-Mormon",
+                      "item": {
+                        "itemContent": {
+                          "itemType": "TimelineTrend",
+                          "__typename": "TimelineTrend",
+                          "name": "Mormon",
+                          "trend_url": {
+                            "url": "twitter://search/?query=Mormon&src=trend_click&pc=true&vertical=trends",
+                            "urlType": "DeepLink",
+                            "urtEndpointOptions": {
+                              "requestParams": [
+                                {
+                                  "key": "cd",
+                                  "value": "HBgGTW9ybW9uAAA="
+                                }
+                              ]
+                            }
+                          },
+                          "trend_metadata": {
+                            "domain_context": "Sports · Trending",
+                            "url": {
+                              "url": "twitter://search/?query=Mormon&src=trend_click&pc=true&vertical=trends",
+                              "urlType": "DeepLink",
+                              "urtEndpointOptions": {
+                                "requestParams": [
+                                  {
+                                    "key": "cd",
+                                    "value": "HBgGTW9ybW9uAAA="
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        },
+                        "clientEventInfo": {
+                          "component": "unified_events",
+                          "element": "trend",
+                          "details": {
+                            "timelinesDetails": {
+                              "controllerData": "DAACDAAQDAABCgABb5tBjlkAyQoKAAIAAAGcLwyH4AAAAAA="
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "displayType": "Vertical",
+                  "header": {
+                    "displayType": "Classic",
+                    "text": "What’s happening"
+                  },
+                  "footer": {
+                    "displayType": "Classic",
+                    "text": "Show more",
+                    "landingUrl": {
+                      "url": "https://twitter.com/explore/tabs/for-you",
+                      "urlType": "ExternalUrl"
+                    }
+                  },
+                  "clientEventInfo": {
+                    "component": "unified_events"
+                  }
+                }
+              },
+              {
+                "entryId": "cursor-top-2019477271768727553",
+                "sortIndex": "2019477271768727553",
+                "content": {
+                  "entryType": "TimelineTimelineCursor",
+                  "__typename": "TimelineTimelineCursor",
+                  "value": "DAAJAAA",
+                  "cursorType": "Top"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
