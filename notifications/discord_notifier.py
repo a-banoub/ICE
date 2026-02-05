@@ -22,6 +22,9 @@ SOURCE_LABELS = {
     "reddit": "Reddit",
     "rss": "News (RSS)",
     "iceout": "Iceout.org",
+    "stopice": "StopICE.net",
+    "bluesky": "Bluesky",
+    "instagram": "Instagram",
 }
 
 
@@ -64,9 +67,21 @@ def _format_time_cst_win(dt: datetime) -> str:
 
 
 class DiscordNotifier:
+    """Sends notifications to Discord via webhook and/or bot.
+
+    Supports running BOTH modes simultaneously:
+    - Webhook mode: Sends to your configured channel (for personal use)
+    - Bot mode: Broadcasts to all servers that have subscribed (for public)
+
+    If both are configured, alerts go to both your webhook AND all bot subscribers.
+    """
+
     def __init__(self, config: Config):
         self.webhook_url = config.discord_webhook_url
+        self.bot_token = config.discord_bot_token
         self.dry_run = config.dry_run
+        self._use_webhook = bool(self.webhook_url)
+        self._use_bot = bool(self.bot_token)
 
     def _build_new_incident_embed(
         self, incident: CorroboratedIncident
@@ -176,19 +191,78 @@ class DiscordNotifier:
         return self._build_new_incident_embed(incident)
 
     async def send(self, incident: CorroboratedIncident) -> bool:
-        """Send an incident to Discord. Returns True on success."""
-        embed = self._build_embed(incident)
+        """Send an incident to Discord. Returns True if at least one method succeeds.
 
+        Sends via BOTH webhook and bot if both are configured:
+        - Webhook: Your personal/admin channel
+        - Bot: All subscribed community servers
+        """
         if self.dry_run:
             ntype = incident.notification_type.upper()
+            methods = []
+            if self._use_webhook:
+                methods.append("webhook")
+            if self._use_bot:
+                methods.append("bot")
             logger.info(
-                "[discord] DRY RUN: Would send %s for cluster %d (%s, %d sources)",
+                "[discord] DRY RUN: Would send %s for cluster %d (%s, %d sources) via %s",
                 ntype,
                 incident.cluster_id,
                 incident.primary_location,
                 incident.source_count,
+                " + ".join(methods) or "nothing configured",
             )
             return True
+
+        success = False
+
+        # Send via webhook (your personal channel)
+        if self._use_webhook:
+            webhook_ok = await self._send_via_webhook(incident)
+            success = success or webhook_ok
+
+        # Send via bot (all subscribed servers)
+        if self._use_bot:
+            bot_ok = await self._send_via_bot(incident)
+            success = success or bot_ok
+
+        return success
+
+    async def _send_via_bot(self, incident: CorroboratedIncident) -> bool:
+        """Send alert via bot to all subscribed channels."""
+        try:
+            from notifications.discord_bot import send_alert, _bot_instance
+
+            # Bot must be running to send alerts
+            if _bot_instance is None:
+                logger.debug(
+                    "[discord] Bot not running - start with run_bot.py or remove "
+                    "DISCORD_BOT_TOKEN from .env to disable bot mode"
+                )
+                return False
+
+            count = await send_alert(incident)
+            if count > 0:
+                logger.info(
+                    "[discord] Bot sent %s notification to %d channels for cluster %d",
+                    incident.notification_type,
+                    count,
+                    incident.cluster_id,
+                )
+                return True
+            else:
+                logger.debug("[discord] Bot mode: no subscribed channels to notify")
+                return False
+        except ImportError as e:
+            logger.warning("[discord] Bot mode unavailable: %s", e)
+            return False
+        except Exception:
+            logger.exception("[discord] Error sending via bot")
+            return False
+
+    async def _send_via_webhook(self, incident: CorroboratedIncident) -> bool:
+        """Send alert via webhook to single channel."""
+        embed = self._build_embed(incident)
 
         if not self.webhook_url:
             logger.warning("[discord] No webhook URL configured, skipping")
@@ -204,7 +278,7 @@ class DiscordNotifier:
 
             if response and response.status_code in (200, 204):
                 logger.info(
-                    "[discord] Sent %s notification for cluster %d",
+                    "[discord] Webhook sent %s notification for cluster %d",
                     incident.notification_type,
                     incident.cluster_id,
                 )
@@ -212,7 +286,7 @@ class DiscordNotifier:
             else:
                 status = response.status_code if response else "no response"
                 logger.error(
-                    "[discord] Failed to send, status: %s", status
+                    "[discord] Failed to send webhook, status: %s", status
                 )
                 return False
 

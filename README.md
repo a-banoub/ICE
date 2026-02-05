@@ -77,8 +77,46 @@ cp .env.example .env
 
 Edit `.env` with your settings:
 
+### Discord Setup
+
+You have two options for Discord notifications:
+
+#### Option 1: Webhook Mode (Simple)
+Best for personal use or single server. Create a webhook in your Discord channel:
+1. Go to Channel Settings → Integrations → Webhooks
+2. Create a new webhook and copy the URL
+
 ```env
-# Required: Discord webhook for notifications
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+```
+
+#### Option 2: Bot Mode (Publishable)
+Best for distribution - anyone can invite the bot to their server:
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. Create a new application
+3. Go to Bot → Add Bot
+4. Enable **MESSAGE CONTENT INTENT** under Privileged Gateway Intents
+5. Copy the bot token
+6. Go to OAuth2 → URL Generator
+7. Select scopes: `bot`, `applications.commands`
+8. Select permissions: Send Messages, Embed Links, Use Slash Commands
+9. Copy the invite URL and share it!
+
+```env
+DISCORD_BOT_TOKEN=your_bot_token_here
+DISCORD_BOT_CLIENT_ID=your_application_client_id
+```
+
+**Bot Commands:**
+- `/ice subscribe [location]` - Subscribe channel to alerts
+- `/ice unsubscribe` - Unsubscribe channel
+- `/ice status` - View subscription status
+- `/ice help` - Show help
+
+### Other Settings
+
+```env
+# Required: Discord webhook for notifications (Option 1)
 DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 
 # Optional: Twitter credentials (for search, not required for profile scraping)

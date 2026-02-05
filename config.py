@@ -21,8 +21,10 @@ def _get_float(key: str, default: float) -> float:
 
 @dataclass(frozen=True)
 class Config:
-    # Discord
-    discord_webhook_url: str = ""
+    # Discord - supports both webhook (single channel) and bot (multi-server) modes
+    discord_webhook_url: str = ""      # For webhook mode (original)
+    discord_bot_token: str = ""        # For bot mode (publishable)
+    discord_bot_client_id: str = ""    # For generating invite URL
 
     # Twitter/X
     twitter_enabled: bool = False
@@ -107,6 +109,8 @@ def load_config() -> Config:
 
     return Config(
         discord_webhook_url=os.getenv("DISCORD_WEBHOOK_URL", ""),
+        discord_bot_token=os.getenv("DISCORD_BOT_TOKEN", ""),
+        discord_bot_client_id=os.getenv("DISCORD_BOT_CLIENT_ID", ""),
         twitter_enabled=_get_bool("TWITTER_ENABLED"),
         twitter_username=os.getenv("TWITTER_USERNAME", ""),
         twitter_password=os.getenv("TWITTER_PASSWORD", ""),

@@ -9,7 +9,8 @@ aiohttp>=3.9.0
 aiosqlite<=0.17.0
 
 # Discord
-discord-webhook>=1.3.0
+discord-webhook>=1.3.0    # For webhook mode
+discord.py>=2.3.0         # For bot mode (multi-server)
 
 # NLP
 spacy>=3.7.0

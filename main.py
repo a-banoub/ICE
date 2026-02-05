@@ -322,11 +322,21 @@ class ICEMonitor:
             self.config.dry_run,
         )
 
-        if not self.config.discord_webhook_url and not self.config.dry_run:
+        # Check Discord configuration
+        has_discord = self.config.discord_webhook_url or self.config.discord_bot_token
+        if not has_discord and not self.config.dry_run:
             logger.warning(
-                "No Discord webhook URL configured. "
-                "Set DISCORD_WEBHOOK_URL in .env or use --dry-run"
+                "No Discord configuration found. "
+                "Set DISCORD_WEBHOOK_URL or DISCORD_BOT_TOKEN in .env, or use --dry-run"
             )
+
+        # Log Discord mode
+        if self.config.discord_bot_token and self.config.discord_webhook_url:
+            logger.info("Discord: Webhook + Bot mode (personal channel + multi-server)")
+        elif self.config.discord_bot_token:
+            logger.info("Discord: Bot mode (multi-server)")
+        elif self.config.discord_webhook_url:
+            logger.info("Discord: Webhook mode (single channel)")
 
         # Build task list
         tasks = []
