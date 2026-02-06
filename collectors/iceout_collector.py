@@ -471,17 +471,23 @@ class IceoutCollector(BaseCollector):
                 return []
 
         reports: list[RawReport] = []
+        mpls_count = 0
+        skipped_seen = 0
+        skipped_stale = 0
+
         for item in data:
             # Filter to Minneapolis metro area
             if not _is_mpls_area(item):
                 continue
 
+            mpls_count += 1
             report_id = item.get("id")
             if report_id is None:
                 continue
 
             source_id = f"iceout_{report_id}"
             if not self._is_new(source_id):
+                skipped_seen += 1
                 continue
 
             # Parse timestamps
@@ -498,9 +504,9 @@ class IceoutCollector(BaseCollector):
             else:
                 incident_time = now
 
-            # Enforce 3-hour freshness
+            # Enforce 6-hour freshness (trusted source gets longer window)
             age = now - incident_time
-            if age > timedelta(hours=3):
+            if age > timedelta(hours=6):
                 continue
 
             if created_at_str:
@@ -549,12 +555,19 @@ class IceoutCollector(BaseCollector):
 
         if reports:
             logger.info(
-                "[iceout] Found %d Minneapolis-area reports (of %d total)",
+                "[iceout] Found %d NEW Minneapolis-area reports (of %d total, %d in area, %d already seen)",
                 len(reports),
                 len(data),
+                mpls_count,
+                skipped_seen,
             )
         else:
-            logger.info("[iceout] No Minneapolis-area reports in %d total items", len(data))
+            logger.info(
+                "[iceout] No new reports (%d total, %d in Minneapolis area, %d already seen)",
+                len(data),
+                mpls_count,
+                skipped_seen,
+            )
 
         return reports
 
