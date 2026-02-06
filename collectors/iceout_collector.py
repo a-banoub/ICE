@@ -165,6 +165,20 @@ class IceoutCollector(BaseCollector):
         self._intercepted_data: list[bytes] = []
         self._polls_since_full_auth = 0  # Track polls since last full navigation
 
+    def _kill_orphan_browsers(self) -> None:
+        """Kill any orphaned Chromium processes to prevent memory leaks."""
+        try:
+            import subprocess
+            result = subprocess.run(
+                ["pkill", "-f", "chromium"],
+                capture_output=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                logger.info("[iceout] Killed orphan browser processes")
+        except Exception as e:
+            logger.debug("[iceout] Could not clean orphan browsers: %s", e)
+
     async def _ensure_browser(self) -> bool:
         """Launch Playwright browser if not already running."""
         logger.info("[iceout] Ensuring browser is available...")
@@ -179,6 +193,9 @@ class IceoutCollector(BaseCollector):
                 # Page died, reset everything
                 logger.info("[iceout] Existing browser session died, resetting")
                 await self._close_browser()
+
+        # Kill any orphaned browser processes before launching new one
+        self._kill_orphan_browsers()
 
         try:
             logger.info("[iceout] Launching new Playwright browser...")
