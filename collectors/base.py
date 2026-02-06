@@ -41,9 +41,10 @@ class BaseCollector(ABC):
             return False
         self._seen_ids.add(source_id)
         # Cap the in-memory set to avoid unbounded growth
-        if len(self._seen_ids) > 10_000:
-            # Keep the most recent half (arbitrary trim)
-            trimmed = list(self._seen_ids)[-5_000:]
+        # Reduced from 10K to 2K to save memory on low-RAM servers
+        if len(self._seen_ids) > 2_000:
+            # Keep the most recent half
+            trimmed = list(self._seen_ids)[-1_000:]
             self._seen_ids = set(trimmed)
         return True
 

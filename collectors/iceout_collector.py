@@ -249,7 +249,8 @@ class IceoutCollector(BaseCollector):
         if "report-feed" in response.url and response.status == 200:
             try:
                 body = await response.body()
-                self._intercepted_data.append(body)
+                # Only keep the most recent response to prevent memory leak
+                self._intercepted_data = [body]
                 logger.debug(
                     "[iceout] Intercepted report-feed response (%d bytes)",
                     len(body),
