@@ -43,9 +43,16 @@ class Correlator:
             return []
 
         logger.info("Correlating %d recent relevant reports", len(reports))
+        for r in reports:
+            logger.info(
+                "  -> [%s] %s (cluster_id=%s, notified=%s)",
+                r.source_type, r.original_text[:50].replace('\n', ' '),
+                r.cluster_id, getattr(r, 'notified', 'N/A')
+            )
 
         # Separate reports into already-clustered and unclustered
         unclustered = [r for r in reports if r.cluster_id is None]
+        logger.info("Unclustered reports: %d", len(unclustered))
         clustered_by_id: dict[int, list[ProcessedReport]] = {}
         for r in reports:
             if r.cluster_id is not None:
@@ -233,16 +240,25 @@ class Correlator:
         with real-time reports that have already been vetted by their systems.
         These can trigger alerts without requiring corroboration from other sources.
         """
+        logger.info("Checking %d reports for high-priority single-source alerts", len(reports))
         incidents = []
 
         for report in reports:
+            logger.info(
+                "  Checking report: [%s] cluster_id=%s",
+                report.source_type, report.cluster_id
+            )
             # Only high-priority sources qualify
             if report.source_type not in HIGH_PRIORITY_SOURCES:
+                logger.info("    -> Skipping: not high-priority source")
                 continue
 
             # Skip if already clustered
             if report.cluster_id is not None:
+                logger.info("    -> Skipping: already clustered")
                 continue
+
+            logger.info("    -> CREATING single-source alert for %s", report.source_type)
 
             # Build single-report incident
             source_types = {report.source_type}

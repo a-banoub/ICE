@@ -216,14 +216,25 @@ class DiscordNotifier:
 
         success = False
 
+        logger.info(
+            "[discord] SENDING notification for cluster %d: %s (%d sources)",
+            incident.cluster_id,
+            incident.primary_location,
+            incident.source_count,
+        )
+
         # Send via webhook (your personal channel)
         if self._use_webhook:
+            logger.info("[discord] Attempting webhook send...")
             webhook_ok = await self._send_via_webhook(incident)
+            logger.info("[discord] Webhook result: %s", webhook_ok)
             success = success or webhook_ok
 
         # Send via bot (all subscribed servers)
         if self._use_bot:
+            logger.info("[discord] Attempting bot send...")
             bot_ok = await self._send_via_bot(incident)
+            logger.info("[discord] Bot result: %s", bot_ok)
             success = success or bot_ok
 
         return success
