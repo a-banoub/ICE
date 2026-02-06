@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 # High-priority sources that can trigger single-source alerts
 # These are trusted community reporting platforms with real-time data
-HIGH_PRIORITY_SOURCES = {"iceout", "stopice"}
+# Bluesky included because it has active ICE reporting community
+HIGH_PRIORITY_SOURCES = {"iceout", "stopice", "bluesky"}
 
 
 class Correlator:
