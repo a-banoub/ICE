@@ -225,6 +225,19 @@ NEWS_ARTICLE_PATTERNS = re.compile(
     r"in a statement|released a statement|"
     r"breaking:|update:|developing:|"
     r"earlier today|yesterday|last week|last month|"
+    # Day-of-week past references (e.g. "on Sunday", "on Monday")
+    r"on (?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)|"
+    # Political commentary / quotes about events
+    r"(?:president|governor|senator|mayor|rep\.) .{0,30}(?:said|says|stated|announced|commented|responded)|"
+    r"what .{0,40}said about|"
+    # Past violent event coverage
+    r"fatal .{0,20}(?:shooting|incident|encounter|raid|confrontation)|"
+    # Viral / retrospective content sharing
+    r"viral (?:clip|video|post|image)|"
+    r"you may have seen|"
+    # News framing language
+    r"following (?:the )?(?:latest|recent|earlier)|"
+    r"more protests|"
     # Opinion/analysis
     r"opinion:|editorial:|analysis:|commentary:"
     r")\b",
