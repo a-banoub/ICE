@@ -52,11 +52,15 @@ class BaseCollector(ABC):
         self.is_running = True
         backoff = 1
         max_backoff = 300  # 5 minutes
+        cycle_count = 0
 
         logger.info("[%s] Collector starting", self.name)
 
         while self.is_running:
             try:
+                cycle_count += 1
+                logger.info("[%s] Starting collection cycle %d", self.name, cycle_count)
+
                 reports = await self.collect()
                 backoff = 1  # reset on success
 
@@ -67,6 +71,8 @@ class BaseCollector(ABC):
                     logger.info(
                         "[%s] Collected %d new reports", self.name, len(reports)
                     )
+                else:
+                    logger.info("[%s] Cycle %d complete, no new reports", self.name, cycle_count)
 
             except asyncio.CancelledError:
                 logger.info("[%s] Collector cancelled", self.name)
