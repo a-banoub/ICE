@@ -342,19 +342,21 @@ def is_relevant(text: str, source_type: str = "unknown") -> bool:
     if source_type in TRUSTED_SOURCES:
         return True
 
-    # NEWS sources (RSS): These are news websites that frequently report
-    # on court cases, policy, past events. REQUIRE real-time signals.
+    # NEWS sources (RSS): These are news websites that may report
+    # on court cases, policy, past events. Reject only if NEWS patterns found.
     if source_type in NEWS_SOURCES:
         if has_realtime_signal:
             return True
-        # For news sources, reject even if no explicit news patterns found
-        # The whitelist approach: must have real-time language to pass
-        logger.debug(
-            "Rejecting news source (no real-time signal): [%s] %s...",
-            source_type,
-            text[:80].replace('\n', ' ')
-        )
-        return False
+        # If it has news article patterns (court cases, past tense, etc.), reject it
+        if has_news_pattern:
+            logger.info(
+                "Rejecting news article: [%s] %s...",
+                source_type,
+                text[:80].replace('\n', ' ')
+            )
+            return False
+        # Otherwise allow it through - it matched ICE + geo keywords
+        return True
 
     # COMMUNITY sources (Twitter, Bluesky, Reddit): Mixed content.
     # Allow through unless it has clear news article patterns.

@@ -39,9 +39,10 @@ class Correlator:
 
         reports = await self.db.get_recent_relevant(since)
         if not reports:
+            logger.debug("No recent relevant reports to correlate")
             return []
 
-        logger.debug("Correlating %d recent relevant reports", len(reports))
+        logger.info("Correlating %d recent relevant reports", len(reports))
 
         # Separate reports into already-clustered and unclustered
         unclustered = [r for r in reports if r.cluster_id is None]

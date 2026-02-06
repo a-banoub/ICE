@@ -229,10 +229,16 @@ class ICEMonitor:
 
         if relevant:
             logger.info(
-                "Relevant report: [%s] %s (location: %s)",
+                "✓ RELEVANT: [%s] %s (location: %s)",
                 report.source_type,
-                report.text[:80],
+                report.text[:80].replace('\n', ' '),
                 neighborhood or "unknown",
+            )
+        else:
+            logger.debug(
+                "✗ Not relevant: [%s] %s...",
+                report.source_type,
+                report.text[:60].replace('\n', ' '),
             )
 
     async def _processing_loop(self) -> None:
