@@ -166,16 +166,21 @@ class IceoutCollector(BaseCollector):
 
     async def _ensure_browser(self) -> bool:
         """Launch Playwright browser if not already running."""
+        logger.info("[iceout] Ensuring browser is available...")
+
         if self._page is not None:
             try:
                 # Check if page is still alive
                 await self._page.title()
+                logger.info("[iceout] Existing browser session is alive")
                 return True
             except Exception:
                 # Page died, reset everything
+                logger.info("[iceout] Existing browser session died, resetting")
                 await self._close_browser()
 
         try:
+            logger.info("[iceout] Launching new Playwright browser...")
             from playwright.async_api import async_playwright
 
             self._playwright = await async_playwright().start()
