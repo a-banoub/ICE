@@ -455,6 +455,13 @@ class ICECommands(commands.Cog):
 _bot_instance: Optional[ICEAlertBot] = None
 
 
+def _set_bot_instance(bot: ICEAlertBot) -> None:
+    """Set the global bot instance (called by main.py)."""
+    global _bot_instance
+    _bot_instance = bot
+    logger.info("Bot instance registered for alert broadcasting")
+
+
 async def init_bot(token: str) -> ICEAlertBot:
     """Initialize and return the bot instance."""
     global _bot_instance

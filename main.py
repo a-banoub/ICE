@@ -342,8 +342,25 @@ class ICEMonitor:
         elif self.config.discord_webhook_url:
             logger.info("Discord: Webhook mode (single channel)")
 
+        # Start Discord bot if configured (runs in background)
+        self._bot = None
+        if self.config.discord_bot_token:
+            try:
+                from notifications.discord_bot import ICEAlertBot, _set_bot_instance
+                self._bot = ICEAlertBot(self.config.discord_bot_token)
+                _set_bot_instance(self._bot)
+                logger.info("Discord bot initialized, starting in background...")
+            except ImportError as e:
+                logger.warning("Discord bot unavailable: %s", e)
+
         # Build task list
         tasks = []
+
+        # Discord bot task (if configured)
+        if self._bot:
+            tasks.append(asyncio.create_task(
+                self._bot.start(self._bot.token), name="discord_bot"
+            ))
 
         # Collector tasks
         for collector in self.collectors:
