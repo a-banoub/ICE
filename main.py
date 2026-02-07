@@ -1,6 +1,6 @@
-"""Minneapolis ICE Activity Monitor
+"""ICE Activity Monitor
 
-Monitors multiple data sources for ICE enforcement activity in Minneapolis,
+Monitors multiple data sources for ICE enforcement activity across multiple cities,
 correlates reports across sources, and forwards corroborated incidents to Discord.
 
 Usage:
@@ -58,6 +58,10 @@ class ICEMonitor:
         self.notifier = DiscordNotifier(config)
         self._location_extractor = None  # Lazy-loaded (spaCy is heavy)
         self._shutdown_event = asyncio.Event()
+
+        # City tagger for multi-city support
+        from processing.city_tagger import CityTagger
+        self._city_tagger = CityTagger(config.city_locales)
 
     def _init_collectors(self) -> None:
         """Initialize collectors based on available configuration."""
@@ -135,7 +139,11 @@ class ICEMonitor:
         if self._location_extractor is None:
             try:
                 from processing.location_extractor import LocationExtractor
-                self._location_extractor = LocationExtractor()
+                locale = self.config.locale
+                self._location_extractor = LocationExtractor(
+                    neighborhoods_file=locale.neighborhoods_file,
+                    landmarks_file=locale.landmarks_file,
+                )
                 logger.info("Location extractor loaded (spaCy + gazetteer)")
             except OSError as e:
                 logger.warning(
@@ -161,7 +169,7 @@ class ICEMonitor:
             max_age = timedelta(seconds=self.config.report_max_age_seconds)
 
         if (now - report.timestamp) > max_age:
-            logger.info(
+            logger.debug(
                 "Skipping stale report [%s] from %s (age > %s)",
                 report.source_type,
                 report.timestamp.isoformat(),
@@ -213,7 +221,7 @@ class ICEMonitor:
                     else:
                         # Use the raw location description from the source
                         neighborhood = report.raw_metadata.get(
-                            "location_description", "Minneapolis area"
+                            "location_description", self.config.locale.fallback_location
                         )
             else:
                 neighborhood = report.raw_metadata.get("location_description")
@@ -223,6 +231,9 @@ class ICEMonitor:
                 locations = extractor.extract(cleaned)
                 neighborhood, lat, lon = extractor.get_primary_location(locations)
 
+        # Tag with city
+        city = self._city_tagger.tag(cleaned, lat, lon) if relevant else ""
+
         await self.db.update_report_processing(
             report_id=row_id,
             cleaned_text=cleaned,
@@ -231,14 +242,16 @@ class ICEMonitor:
             latitude=lat,
             longitude=lon,
             keywords_matched=keywords,
+            city=city,
         )
 
         if relevant:
             logger.info(
-                "✓ RELEVANT: [%s] %s (location: %s)",
+                "✓ RELEVANT: [%s] %s (location: %s, city: %s)",
                 report.source_type,
                 report.text[:80].replace('\n', ' '),
                 neighborhood or "unknown",
+                city or "unknown",
             )
         else:
             logger.debug(
@@ -324,6 +337,11 @@ class ICEMonitor:
 
     async def run(self) -> None:
         """Start all components and run until shutdown."""
+        # Initialize locale-dependent geo keywords
+        from processing.text_processor import init_geo_keywords
+        init_geo_keywords(self.config.locale)
+        logger.info("Geo keywords loaded for locale: %s", self.config.locale.name)
+
         # Initialize
         await self.db.connect()
         self._init_collectors()
@@ -359,7 +377,10 @@ class ICEMonitor:
         if self.config.discord_bot_token:
             try:
                 from notifications.discord_bot import ICEAlertBot, _set_bot_instance
-                self._bot = ICEAlertBot(self.config.discord_bot_token)
+                self._bot = ICEAlertBot(
+                    self.config.discord_bot_token,
+                    available_cities=list(self.config.available_cities),
+                )
                 _set_bot_instance(self._bot)
                 logger.info("Discord bot initialized, starting in background...")
             except ImportError as e:
@@ -403,7 +424,7 @@ class ICEMonitor:
         finally:
             logger.info("Shutting down...")
 
-            # Stop collectors
+            # Stop collectors (sets is_running = False so loops exit)
             for collector in self.collectors:
                 collector.stop()
 
@@ -413,10 +434,39 @@ class ICEMonitor:
 
             await asyncio.gather(*tasks, return_exceptions=True)
 
-            # Cleanup Twitter session if active
+            # Close collector browser contexts first (before killing the browser)
             for collector in self.collectors:
                 if hasattr(collector, "cleanup"):
-                    await collector.cleanup()
+                    try:
+                        await collector.cleanup()
+                    except Exception:
+                        pass
+
+            # Brief pause so Playwright futures settle before we kill the process
+            await asyncio.sleep(0.5)
+
+            # Suppress Playwright TargetClosedError noise during browser teardown
+            loop = asyncio.get_running_loop()
+            _orig_handler = loop.get_exception_handler()
+
+            def _suppress_target_closed(loop, context):
+                exc = context.get("exception")
+                if exc and "TargetClosedError" in type(exc).__name__:
+                    return  # swallow silently
+                if _orig_handler:
+                    _orig_handler(loop, context)
+                else:
+                    loop.default_exception_handler(context)
+
+            loop.set_exception_handler(_suppress_target_closed)
+
+            # Shut down the shared browser pool (single Chromium process)
+            from collectors.browser_pool import BrowserPool
+            await BrowserPool.shared().shutdown()
+
+            # Restore default handler after teardown settles
+            await asyncio.sleep(0.5)
+            loop.set_exception_handler(_orig_handler)
 
             await self.db.close()
             logger.info("Shutdown complete.")
@@ -427,7 +477,7 @@ class ICEMonitor:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Minneapolis ICE Activity Monitor"
+        description="ICE Activity Monitor"
     )
     parser.add_argument(
         "--dry-run",

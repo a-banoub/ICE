@@ -1,248 +1,368 @@
-# Minneapolis ICE Activity Monitor
+# ICE Activity Monitor
 
-Real-time monitoring system for ICE (Immigration and Customs Enforcement) activity in the Minneapolis/Twin Cities area. Collects reports from multiple community sources, correlates them across platforms, and sends alerts to Discord.
+Real-time monitoring system for ICE (Immigration and Customs Enforcement) activity. Collects reports from multiple community sources, correlates them across platforms, and sends alerts to Discord.
+
+**Locale-aware** — ships with Minneapolis/Twin Cities configuration, but every piece of location-specific data lives in a single YAML file so you can deploy it for any city.
 
 ## Purpose
 
-This tool helps community members stay informed about ICE enforcement activity in their neighborhoods by:
+This tool helps community members stay informed about ICE enforcement activity in their area by:
 
 - Aggregating reports from trusted community platforms (Iceout.org, StopICE.net)
 - Monitoring social media for real-time alerts (Bluesky, Instagram, Twitter/X)
+- Scanning local news RSS feeds for breaking enforcement stories
 - Correlating reports across sources to reduce false positives
 - Sending timely Discord notifications when activity is detected
 
 ## Features
 
-- **Multi-Source Collection**: Pulls from 6+ data sources including community reporting platforms, social media, and news RSS feeds
-- **Smart Correlation**: Groups related reports using temporal, geographic, and content similarity analysis
-- **Geographic Filtering**: Focuses on Greater Minneapolis area (50km radius from downtown)
-- **Source-Based Trust**: High-priority sources (Iceout, StopICE) can trigger single-source alerts
-- **News Filtering**: Filters out news articles about past events, court cases, and policy discussions
-- **Stale Account Detection**: Automatically skips social media accounts that haven't posted in 90+ days
+- **Multi-Source Collection** — 7 collector types: Iceout.org, StopICE.net, Bluesky, Instagram, Twitter/X, Reddit, and RSS
+- **Smart Correlation** — Groups related reports using temporal, geographic, and content similarity analysis
+- **Configurable Locale** — All geographic keywords, monitored accounts, coordinates, and search queries live in `locales/<city>.yaml`
+- **Geographic Filtering** — Configurable radius from a center point (default 50 km / ~31 mi)
+- **Source-Based Trust** — High-priority sources (Iceout, StopICE) can trigger single-source alerts
+- **News Filtering** — Rejects articles about court cases, past events, and policy discussions
+- **Stale Account Detection** — Automatically skips social media accounts that haven't posted in 90+ days
+- **Timezone-Aware** — Notifications display times in the locale's timezone (proper DST via `zoneinfo`)
 
 ## Data Sources
 
-| Source | Type | Description |
-|--------|------|-------------|
-| **Iceout.org** | Community Platform | Crowd-sourced ICE sighting reports with verification |
-| **StopICE.net** | Community Platform | SMS/web-based alert network (API may be unreliable) |
-| **Bluesky** | Social Media | 8 monitored accounts + keyword searches |
-| **Instagram** | Social Media | 4 monitored community organization accounts |
-| **Twitter/X** | Social Media | Auto-validated active accounts only |
-| **RSS Feeds** | News | Star Tribune, MPR News, KARE 11 (strict filtering) |
+| Source | Type | Auth Required | Description |
+|--------|------|:---:|-------------|
+| **Iceout.org** | Community Platform | No | Crowd-sourced ICE sighting reports with verification |
+| **StopICE.net** | Community Platform | No | SMS/web-based alert network |
+| **Bluesky** | Social Media | No | Public API — monitored accounts + keyword searches |
+| **Instagram** | Social Media | No | Playwright scraping of public profiles |
+| **Twitter/X** | Social Media | Optional | Playwright scraping; login enables search |
+| **Reddit** | Social Media | Yes | Async PRAW — monitors configured subreddits |
+| **RSS Feeds** | News | No | Configurable feed list with strict relevance filtering |
 
-## Installation
+---
 
-### Prerequisites
+## Quick Start
 
-- Python 3.10+
-- Chrome/Chromium browser (for Playwright)
+### 1. Install uv
 
-### Setup
+[uv](https://docs.astral.sh/uv/) is a fast Python package manager that replaces `pip`, `venv`, and `pip-tools`.
 
-1. Clone the repository:
+**Linux / macOS / WSL:**
 ```bash
-git clone https://github.com/yourusername/ice-monitor.git
-cd ice-monitor
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-2. Create and activate a virtual environment:
+After installing, either restart your shell or run:
 ```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
+source $HOME/.local/bin/env
 ```
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
+**Windows (PowerShell):**
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-4. Install Playwright browsers:
+**Verify installation:**
 ```bash
-playwright install chromium
+uv --version
 ```
 
-5. Download the spaCy model for location extraction:
+> **Already have uv?** Skip ahead to step 2.
+>
+> **Prefer pip?** You can still use `pip install -r requirements.txt` — the legacy file is kept for compatibility.
+
+### 2. Set up the project
+
+From the project root:
+
 ```bash
-python -m spacy download en_core_web_sm
+uv venv            # create a .venv in the current directory
+uv sync            # install all dependencies from pyproject.toml
 ```
 
-6. Copy `.env.example` to `.env` and configure:
+### 3. Install browser & NLP model
+
+`uv run` automatically activates the `.venv` before executing:
+
+```bash
+uv run playwright install chromium               # headless browser for Iceout, Twitter, Instagram
+uv run python -m spacy download en_core_web_sm   # NER model for location extraction
+```
+
+### 4. Configure
+
 ```bash
 cp .env.example .env
+# edit .env — at minimum set these two:
+#   LOCALE=minneapolis
+#   DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
+
+See [Configuration](#configuration) for the full list of options.
+
+### 5. Run
+
+```bash
+uv run python main.py
+```
+
+Dry run (logs only, no Discord):
+```bash
+uv run python main.py --dry-run
+```
+
+Verbose logging:
+```bash
+uv run python main.py --log-level DEBUG
+```
+
+---
 
 ## Configuration
 
-Edit `.env` with your settings:
+All settings live in `.env`. Copy `.env.example` for the full reference.
 
-### Discord Setup
+### Locale
 
-You have two options for Discord notifications:
+```env
+# Must match a file in locales/ (e.g. minneapolis → locales/minneapolis.yaml)
+LOCALE=minneapolis
+```
 
-#### Option 1: Webhook Mode (Simple)
-Best for personal use or single server. Create a webhook in your Discord channel:
-1. Go to Channel Settings → Integrations → Webhooks
-2. Create a new webhook and copy the URL
+The locale file controls: center coordinates, radius, timezone, geo keywords, monitored accounts, search queries, RSS feeds, subreddits, and Discord display text. See [Adding a New City](#adding-a-new-city).
+
+### Discord
+
+You can run **both** modes simultaneously.
+
+#### Webhook Mode (simple, single channel)
+1. Channel Settings → Integrations → Webhooks → New Webhook
+2. Copy the URL
 
 ```env
 DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
 
-#### Option 2: Bot Mode (Publishable)
-Best for distribution - anyone can invite the bot to their server:
-1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
-2. Create a new application
-3. Go to Bot → Add Bot
-4. Enable **MESSAGE CONTENT INTENT** under Privileged Gateway Intents
-5. Copy the bot token
-6. Go to OAuth2 → URL Generator
-7. Select scopes: `bot`, `applications.commands`
-8. Select permissions: Send Messages, Embed Links, Use Slash Commands
-9. Copy the invite URL and share it!
+#### Bot Mode (multi-server, subscribable)
+1. [Discord Developer Portal](https://discord.com/developers/applications) → New Application → Bot
+2. Enable **MESSAGE CONTENT INTENT** under Privileged Gateway Intents
+3. OAuth2 → URL Generator → scopes: `bot`, `applications.commands` → permissions: Send Messages, Embed Links, Use Slash Commands
+4. Share the invite URL
 
 ```env
-DISCORD_BOT_TOKEN=your_bot_token_here
-DISCORD_BOT_CLIENT_ID=your_application_client_id
+DISCORD_BOT_TOKEN=your_bot_token
+DISCORD_BOT_CLIENT_ID=your_app_client_id
 ```
 
 **Bot Commands:**
-- `/ice subscribe [location]` - Subscribe channel to alerts
-- `/ice unsubscribe` - Unsubscribe channel
-- `/ice status` - View subscription status
-- `/ice help` - Show help
 
-### Other Settings
+| Command | Description |
+|---------|-------------|
+| `/ice subscribe [location]` | Subscribe this channel to alerts |
+| `/ice unsubscribe` | Unsubscribe this channel |
+| `/ice status` | View subscription status |
+| `/ice help` | Show help |
+
+### Collectors
 
 ```env
-# Required: Discord webhook for notifications (Option 1)
-DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
-
-# Optional: Twitter credentials (for search, not required for profile scraping)
+# Twitter (optional login for search)
 TWITTER_ENABLED=true
 TWITTER_USERNAME=
 TWITTER_PASSWORD=
 
-# Enable/disable collectors
+# Reddit (requires API creds from https://www.reddit.com/prefs/apps)
+REDDIT_CLIENT_ID=
+REDDIT_CLIENT_SECRET=
+
+# Community platforms (no auth needed)
 ICEOUT_ENABLED=true
+STOPICE_ENABLED=true
 BLUESKY_ENABLED=true
 INSTAGRAM_ENABLED=true
-STOPICE_ENABLED=true
-
-# Geographic filtering (50km = ~30 miles from downtown Minneapolis)
-MAX_DISTANCE_KM=50.0
-
-# Correlation settings
-MIN_CORROBORATION_SOURCES=2  # Except high-priority sources
-CLUSTER_EXPIRY_HOURS=6.0     # Stop updates after this time
 ```
 
-## Usage
+### Tuning
 
-### Run the monitor:
-```bash
-python main.py
+```env
+MAX_DISTANCE_KM=50.0              # Geo-filter radius
+CORRELATION_WINDOW_SECONDS=10800   # 3-hour correlation window
+MIN_CORROBORATION_SOURCES=2        # Multi-source required (except trusted)
+SIMILARITY_THRESHOLD=0.35          # Content similarity for clustering
+GEO_PROXIMITY_KM=3.0              # Spatial proximity for clustering
+CLUSTER_EXPIRY_HOURS=6.0           # Stop updates after this
 ```
 
-### Dry run (logs only, no Discord):
-```bash
-python main.py --dry-run
-```
-
-### Verbose logging:
-```bash
-python main.py --log-level DEBUG
-```
+---
 
 ## How It Works
 
+### Pipeline
+
+```
+Collectors → Queue → Processor → Database → Correlator → Notifier → Discord
+```
+
 ### Collection Phase
+
 Each collector polls its source at configured intervals:
-- Iceout.org: Every 90 seconds
-- Bluesky: Every 2 minutes
-- Instagram: Every 5 minutes
-- StopICE.net: Every 30 minutes
-- RSS: Every 5 minutes
+
+| Collector | Default Interval |
+|-----------|:---:|
+| Iceout.org | 90 s |
+| Bluesky | 2 min |
+| Twitter/X | 2 min |
+| Instagram | 5 min |
+| RSS | 5 min |
+| Reddit | 1 min |
+| StopICE.net | 30 min |
 
 ### Processing Phase
-1. **Freshness Filter**: Discards reports older than 3 hours (6 hours for trusted sources like Iceout)
-2. **Relevance Filter**: Checks for ICE keywords + Minneapolis geographic references
-3. **News Filter**: Rejects news articles about court cases, past events, or policy discussions
-4. **Location Extraction**: Uses spaCy NER + custom gazetteer to identify neighborhoods
+
+1. **Freshness Filter** — Discards reports older than 3 hours (6 h for trusted sources)
+2. **Relevance Filter** — Two-tier keyword check: ICE keywords + geographic keywords (loaded from locale)
+3. **News Filter** — Rejects articles about court cases, past events, or policy discussions
+4. **Location Extraction** — spaCy NER + custom gazetteer identifies neighborhoods and coordinates
 
 ### Correlation Phase
-1. **Cluster Updates**: Checks if new reports match existing active incidents
-2. **New Clusters**: Groups unclustered reports by similarity (temporal + geographic + content)
-3. **High-Priority Singles**: Trusted sources (Iceout, StopICE) can alert without corroboration
-4. **Confidence Scoring**: Rates clusters by source count, diversity, temporal tightness, and location precision
+
+1. **Cluster Updates** — Matches new reports to existing active incidents
+2. **New Clusters** — Groups unclustered reports by temporal + geographic + content similarity
+3. **High-Priority Singles** — Trusted sources (Iceout, StopICE) can trigger alerts without corroboration
+4. **Confidence Scoring** — Source count, diversity, temporal tightness, location precision
 
 ### Notification Phase
-- **NEW**: First-time corroborated incident
-- **UPDATE**: Additional reports added to existing incident
-- Discord embeds include location, source count, confidence, and report summaries
+
+- **NEW** — First-time corroborated incident
+- **UPDATE** — Additional reports added to an existing incident
+- Embeds include location, source count, confidence level, timestamps (in locale timezone), and source excerpts with links
+
+---
+
+## Locale System
+
+All location-specific data is isolated in YAML files under `locales/`.
+
+### What's in a locale file
+
+| Section | Examples |
+|---------|----------|
+| `center` / `radius_km` | Geographic center + filter radius |
+| `timezone` | IANA timezone (e.g. `America/Chicago`) |
+| `geo_keywords` | 100+ keywords for text relevance filtering |
+| `geo_city_names` | City/suburb names for coordinate-fallback filtering |
+| `rss_feeds` / `subreddits` | Local news feeds and subreddits |
+| `bluesky` / `twitter` / `instagram` | Monitored accounts, search queries, trusted handles |
+| `discord` | Bot description, footer text, help text |
+| `neighborhoods_file` / `landmarks_file` | Paths to geodata JSON files |
+| `fallback_location` | Default location string for notifications |
+
+### Adding a New City
+
+1. **Copy the template:**
+   ```bash
+   cp locales/minneapolis.yaml locales/chicago.yaml
+   ```
+
+2. **Edit every section** — update center coordinates, geo keywords, monitored accounts, RSS feeds, search queries, and Discord display strings.
+
+3. **Add geodata** (optional but recommended for neighborhood-level precision):
+   ```bash
+   # Create neighborhood + landmark JSON files for your city
+   # See geodata/minneapolis_neighborhoods.json for the expected format
+   ```
+
+4. **Set the locale in `.env`:**
+   ```env
+   LOCALE=chicago
+   ```
+
+5. **Run** — everything else is automatic.
+
+---
 
 ## Project Structure
 
 ```
 ice-monitor/
-├── main.py                 # Application entry point
-├── config.py               # Configuration management
-├── collectors/             # Data source collectors
-│   ├── base.py            # Abstract base collector
-│   ├── rss_collector.py   # RSS feed collector
-│   ├── iceout_collector.py    # Iceout.org scraper
-│   ├── stopice_collector.py   # StopICE.net XML feed
-│   ├── bluesky_collector.py   # Bluesky API collector
-│   ├── instagram_collector.py # Instagram scraper
-│   └── twitter_collector.py   # Twitter/X scraper
-├── processing/             # Text and location processing
-│   ├── text_processor.py  # Relevance filtering, news detection
-│   ├── location_extractor.py  # NER + gazetteer location extraction
-│   └── similarity.py      # TF-IDF content similarity
-├── correlation/            # Report correlation engine
-│   └── correlator.py      # Clustering and confidence scoring
-├── notifications/          # Alert dispatching
-│   └── discord_notifier.py
-├── storage/                # Data persistence
-│   ├── database.py        # SQLite async wrapper
-│   └── models.py          # Data models
-├── geodata/                # Geographic reference data
-│   └── minneapolis_neighborhoods.json
-└── tests/                  # Test files
+├── main.py                     # Application entry point & orchestrator
+├── config.py                   # Configuration (loads .env + locale)
+├── pyproject.toml              # Project metadata & dependencies (uv)
+├── requirements.txt            # Legacy pip dependencies
+├── run_bot.py                  # Standalone Discord bot runner
+├── .env.example                # Environment variable template
+│
+├── locales/                    # ⬅ Locale-specific configuration
+│   └── minneapolis.yaml        #   Minneapolis/Twin Cities locale
+├── geodata/                    # Geographic reference data
+│   ├── minneapolis_neighborhoods.json
+│   └── landmarks.json
+│
+├── collectors/                 # Data source collectors
+│   ├── base.py                 #   Abstract base collector
+│   ├── rss_collector.py
+│   ├── reddit_collector.py
+│   ├── bluesky_collector.py
+│   ├── instagram_collector.py
+│   ├── twitter_collector.py
+│   ├── iceout_collector.py
+│   └── stopice_collector.py
+├── processing/                 # Text & location processing
+│   ├── locale.py               #   Locale dataclass & YAML loader
+│   ├── text_processor.py       #   ICE + geo keyword relevance filtering
+│   ├── location_extractor.py   #   spaCy NER + gazetteer
+│   └── similarity.py           #   TF-IDF content similarity
+├── correlation/                # Report correlation engine
+│   ├── correlator.py           #   Clustering & confidence scoring
+│   └── report.py
+├── notifications/              # Alert dispatching
+│   ├── discord_notifier.py     #   Webhook-based notifications
+│   └── discord_bot.py          #   Multi-server bot w/ subscriptions
+├── storage/                    # Data persistence
+│   ├── database.py             #   SQLite async wrapper
+│   └── models.py               #   Data models (RawReport, etc.)
+└── tests/
 ```
 
-## Monitored Accounts
+---
+
+## Monitored Accounts (Minneapolis)
+
+These are configured in `locales/minneapolis.yaml` and can be customized per-locale.
 
 ### Bluesky (8 accounts)
-- **News**: @startribune, @bringmethenews, @sahanjournal
-- **Journalists**: @maxnesterak
-- **Community**: @miracmn, @conmijente, @defend612, @sunrisemvmt
+- **News:** @startribune, @bringmethenews, @sahanjournal
+- **Journalists:** @maxnesterak
+- **Community:** @miracmn, @conmijente, @defend612, @sunrisemvmt
 
 ### Instagram (4 accounts)
 - @sunrisetwincities, @indivisible_twincities, @mnfreedomfund, @isaiah_mn
 
-### Twitter/X
-Automatically validates and filters accounts. Only scrapes accounts that have posted within 90 days. Most activist accounts have migrated to Bluesky.
+### Twitter/X (28 accounts)
+Categorized as reporters, activists, news outlets, and officials. Automatically validates accounts — only scrapes those that have posted within 90 days.
 
-## Reliability Features
+---
 
-- **Auto-Recovery**: Browser collectors (Iceout, Twitter, Instagram) automatically restart if they crash or timeout
-- **Timeout Protection**: All collection cycles have a 2-minute timeout to prevent indefinite hangs
-- **Backoff Protection**: Collectors reset after 10 consecutive failures to prevent death spirals
-- **Duplicate Prevention**: Database tracks seen reports to avoid re-notifying on restart
+## Reliability
+
+- **Auto-Recovery** — Browser collectors automatically restart on crash or timeout
+- **Timeout Protection** — 2-minute cap on each collection cycle
+- **Backoff** — Collectors reset after 10 consecutive failures
+- **Duplicate Prevention** — Database tracks seen report IDs across restarts
+- **Account Validation** — Weekly cache refresh; stale/deleted accounts are skipped
+
+---
 
 ## Disclaimer
 
 This tool is for informational purposes only. It aggregates publicly available information from community sources. The accuracy of reports depends on the underlying sources. Always verify information through official channels when making safety decisions.
 
+---
+
 ## Contributing
 
-Contributions welcome! Please:
 1. Fork the repository
 2. Create a feature branch
 3. Submit a pull request
 
 ## License
 
-MIT License - See LICENSE file for details.
+MIT License — see LICENSE file for details.
