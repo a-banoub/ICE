@@ -122,7 +122,10 @@ class DiscordNotifier:
             if len(r.original_text) > 120:
                 excerpt += "..."
 
-            link = f"[source]({r.source_url})" if r.source_url else ""
+            if r.source_url:
+                link = f"🔗 [View on {source_label}]({r.source_url})"
+            else:
+                link = ""
             embed.add_embed_field(
                 name=f"{source_label} — {r.author}",
                 value=f"{excerpt}\n{link}",
@@ -168,7 +171,10 @@ class DiscordNotifier:
             if len(r.original_text) > 120:
                 excerpt += "..."
 
-            link = f"[source]({r.source_url})" if r.source_url else ""
+            if r.source_url:
+                link = f"🔗 [View on {source_label}]({r.source_url})"
+            else:
+                link = ""
             embed.add_embed_field(
                 name=f"NEW: {source_label} — {r.author}",
                 value=f"{excerpt}\n{link}",
