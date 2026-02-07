@@ -540,10 +540,14 @@ class IceoutCollector(BaseCollector):
                 f"Incident time: {incident_time_str or 'unknown'}"
             )
 
+            # Build a report-specific URL. Iceout.org is an SPA, so
+            # we include the report ID as a fragment for reference.
+            report_url = f"https://iceout.org/en/#report-{report_id}"
+
             reports.append(RawReport(
                 source_type="iceout",
                 source_id=source_id,
-                source_url="https://iceout.org/en",
+                source_url=report_url,
                 author="iceout.org",
                 text=text,
                 timestamp=incident_time,
