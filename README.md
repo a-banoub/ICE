@@ -69,40 +69,34 @@ uv --version
 >
 > **Prefer pip?** You can still use `pip install -r requirements.txt` — the legacy file is kept for compatibility.
 
-### 2. Clone & install
+### 2. Set up the project
+
+From the project root:
 
 ```bash
-git clone https://github.com/yourusername/ice-monitor.git
-cd ice-monitor
-uv sync
+uv venv            # create a .venv in the current directory
+uv sync            # install all dependencies from pyproject.toml
 ```
-
-`uv sync` reads `pyproject.toml`, creates a `.venv`, resolves dependencies, and installs everything in one shot.
 
 ### 3. Install browser & NLP model
 
-```bash
-# Playwright browser (needed for Iceout, Twitter, Instagram)
-uv run playwright install chromium
+`uv run` automatically activates the `.venv` before executing:
 
-# spaCy language model (needed for location extraction)
-uv run python -m spacy download en_core_web_sm
+```bash
+uv run playwright install chromium               # headless browser for Iceout, Twitter, Instagram
+uv run python -m spacy download en_core_web_sm   # NER model for location extraction
 ```
 
 ### 4. Configure
 
 ```bash
 cp .env.example .env
+# edit .env — at minimum set these two:
+#   LOCALE=minneapolis
+#   DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
 
-Edit `.env` — at minimum you need a Discord webhook URL:
-
-```env
-LOCALE=minneapolis                          # which locale YAML to load
-DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
-```
-
-See [Configuration](#configuration) below for all options.
+See [Configuration](#configuration) for the full list of options.
 
 ### 5. Run
 
