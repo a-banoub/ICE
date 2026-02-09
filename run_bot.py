@@ -52,8 +52,10 @@ async def main():
         print("4. Copy the URL and share it!")
         sys.exit(1)
 
+    locale = config.locale
+
     print("=" * 60)
-    print("Minneapolis ICE Activity Monitor - Discord Bot")
+    print(f"{locale.display_name} ICE Activity Monitor - Discord Bot")
     print("=" * 60)
     print()
     print("Starting bot...")
@@ -66,7 +68,11 @@ async def main():
     print("Press Ctrl+C to stop")
     print("=" * 60)
 
-    bot = ICEAlertBot(config.discord_bot_token)
+    bot = ICEAlertBot(
+        config.discord_bot_token,
+        locale_name=locale.display_name,
+        locale_area=locale.fallback_location,
+    )
 
     try:
         await bot.start_bot()

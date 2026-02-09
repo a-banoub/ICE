@@ -33,20 +33,7 @@ from storage.models import RawReport
 
 logger = logging.getLogger(__name__)
 
-# ── Accounts to monitor ──────────────────────────────────────────────
-# From GPT Research JSON and Instagram search
-# Note: Instagram heavily restricts access without login, so only accounts
-# that return data without authentication are listed here
-MONITORED_ACCOUNTS = [
-    # Working accounts (verified to return posts without login)
-    "sunrisetwincities",      # Twin Cities Sunrise Movement - climate/social justice
-    "indivisible_twincities", # Progressive coalition - organizes marches/strikes
-    "mnfreedomfund",          # MN Freedom Fund - bail fund, immigrant rights
-    "isaiah_mn",              # ISAIAH MN - faith-based community organizing
-    # Note: defend612, the5051 exist but Instagram blocks content without login
-]
-
-# ── Relevance filtering ──────────────────────────────────────────────
+# ── ICE keyword regex (universal — not locale-specific) ──────────────
 ICE_KEYWORDS_RE = re.compile(
     r"\b(?:"
     r"ice\b|"
@@ -65,39 +52,6 @@ ICE_KEYWORDS_RE = re.compile(
     r")",
     re.IGNORECASE,
 )
-
-MN_KEYWORDS_RE = re.compile(
-    r"\b(?:"
-    r"minneapolis|mpls|minnesota|hennepin|"
-    r"st\.?\s*paul|saint\s+paul|twin\s+cities|"
-    r"bloomington|eden\s+prairie|brooklyn\s+(?:park|center)|"
-    r"lake\s+street|cedar[\s-]riverside|uptown|"
-    r"whittier|powderhorn|phillips|seward|longfellow"
-    r")",
-    re.IGNORECASE,
-)
-
-# These accounts are MN-focused, so we only need ICE keyword
-MN_FOCUSED_ACCOUNTS = {
-    "sunrisetwincities",
-    "indivisible_twincities",
-    "mnfreedomfund",
-    "isaiah_mn",
-}
-
-
-def _post_is_relevant(text: str, username: str) -> bool:
-    """Check if a post is about ICE enforcement in Minnesota."""
-    username_lower = username.lower()
-
-    has_ice = bool(ICE_KEYWORDS_RE.search(text))
-    has_mn = bool(MN_KEYWORDS_RE.search(text))
-
-    # MN-focused accounts only need ICE keyword
-    if username_lower in MN_FOCUSED_ACCOUNTS:
-        return has_ice
-
-    return has_ice and has_mn
 
 
 def _parse_instagram_timestamp(timestamp: int | str | None) -> datetime:
@@ -123,29 +77,38 @@ class InstagramCollector(BaseCollector):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._playwright = None
-        self._browser = None
+        self._pool = None           # set in _ensure_browser
         self._context = None
         self._accounts_per_cycle = 2  # Check 2 accounts per cycle
         self._cycle_count = 0
+        # Build locale-aware data
+        locale = self.config.locale
+        self._geo_re = locale.build_geo_regex()
+        self._monitored_accounts = list(locale.instagram_monitored_accounts)
+        self._focused_accounts = {a.lower() for a in locale.instagram_monitored_accounts}
+
+    def _post_is_relevant(self, text: str, username: str) -> bool:
+        """Check if a post is about ICE enforcement in the locale area."""
+        username_lower = username.lower()
+        has_ice = bool(ICE_KEYWORDS_RE.search(text))
+        has_geo = bool(self._geo_re.search(text))
+
+        # Locale-focused accounts only need ICE keyword
+        if username_lower in self._focused_accounts:
+            return has_ice
+
+        return has_ice and has_geo
 
     async def _ensure_browser(self) -> bool:
-        """Launch Playwright browser."""
+        """Obtain a browser context from the shared pool."""
         if self._context is not None:
             return True
 
         try:
-            from playwright.async_api import async_playwright
+            from collectors.browser_pool import BrowserPool
 
-            self._playwright = await async_playwright().start()
-            self._browser = await self._playwright.chromium.launch(
-                headless=True,  # Instagram works better headless for scraping
-                args=[
-                    "--disable-blink-features=AutomationControlled",
-                    "--no-sandbox",
-                ],
-            )
-            self._context = await self._browser.new_context(
+            self._pool = BrowserPool.shared()
+            self._context = await self._pool.new_context(
                 user_agent=(
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                     "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -154,11 +117,11 @@ class InstagramCollector(BaseCollector):
                 viewport={"width": 1280, "height": 900},
             )
 
-            logger.info("[instagram] Playwright browser launched (headless)")
+            logger.info("[instagram] Browser context ready (shared pool)")
             return True
 
         except Exception as e:
-            logger.error("[instagram] Failed to launch browser: %s", e)
+            logger.error("[instagram] Failed to get browser context: %s", e)
             await self._close_browser()
             return False
 
@@ -447,6 +410,9 @@ class InstagramCollector(BaseCollector):
 
     async def collect(self) -> list[RawReport]:
         """Collect posts from monitored Instagram accounts."""
+        if not self._monitored_accounts:
+            return []
+
         if not await self._ensure_browser():
             return []
 
@@ -456,11 +422,11 @@ class InstagramCollector(BaseCollector):
         self._cycle_count += 1
 
         # Rotate through accounts
-        start = ((self._cycle_count - 1) * self._accounts_per_cycle) % len(MONITORED_ACCOUNTS)
+        start = ((self._cycle_count - 1) * self._accounts_per_cycle) % len(self._monitored_accounts)
         accounts_this_cycle = []
         for i in range(self._accounts_per_cycle):
-            idx = (start + i) % len(MONITORED_ACCOUNTS)
-            accounts_this_cycle.append(MONITORED_ACCOUNTS[idx])
+            idx = (start + i) % len(self._monitored_accounts)
+            accounts_this_cycle.append(self._monitored_accounts[idx])
 
         logger.info(
             "[instagram] Cycle %d: checking @%s",
@@ -483,7 +449,7 @@ class InstagramCollector(BaseCollector):
                         continue
 
                     # Check relevance (or pass through if no text - we got the link)
-                    if text and not _post_is_relevant(text, username):
+                    if text and not self._post_is_relevant(text, username):
                         continue
 
                     timestamp = _parse_instagram_timestamp(post.get("timestamp"))
@@ -525,26 +491,11 @@ class InstagramCollector(BaseCollector):
         return reports
 
     async def _close_browser(self) -> None:
-        """Close all Playwright resources."""
-        try:
-            if self._context:
-                await self._context.close()
-        except Exception:
-            pass
-        try:
-            if self._browser:
-                await self._browser.close()
-        except Exception:
-            pass
-        try:
-            if self._playwright:
-                await self._playwright.stop()
-        except Exception:
-            pass
+        """Release our browser context back to the shared pool."""
+        if self._pool and self._context:
+            await self._pool.close_context(self._context)
 
         self._context = None
-        self._browser = None
-        self._playwright = None
 
     def stop(self) -> None:
         super().stop()
