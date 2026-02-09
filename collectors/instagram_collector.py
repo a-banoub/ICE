@@ -102,7 +102,14 @@ class InstagramCollector(BaseCollector):
     async def _ensure_browser(self) -> bool:
         """Obtain a browser context from the shared pool."""
         if self._context is not None:
-            return True
+            # Verify the context is still alive
+            try:
+                page = await self._context.new_page()
+                await page.close()
+                return True
+            except Exception:
+                logger.warning("[instagram] Browser context died, resetting")
+                await self._close_browser()
 
         try:
             from collectors.browser_pool import BrowserPool
@@ -484,6 +491,11 @@ class InstagramCollector(BaseCollector):
 
             except Exception as e:
                 logger.warning("[instagram] Error collecting from @%s: %s", username, e)
+                # If the error is browser-related, reset context so next cycle gets a fresh one
+                if "browser" in str(e).lower() or "context" in str(e).lower() or "closed" in str(e).lower():
+                    logger.warning("[instagram] Browser context appears dead, resetting")
+                    await self._close_browser()
+                    break
 
         if reports:
             logger.info("[instagram] Found %d relevant posts", len(reports))

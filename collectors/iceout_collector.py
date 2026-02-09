@@ -279,15 +279,19 @@ class IceoutCollector(BaseCollector):
         try:
             await self._page.goto(
                 ICEOUT_SITE_URL,
-                wait_until="networkidle",
+                wait_until="load",
                 timeout=60000,
             )
             logger.info("[iceout] Navigation complete, checking for intercepted data")
 
-            # Wait longer for Altcha proof-of-work + API calls to complete
-            # (increased from 3s to handle slower auth cycles)
-            logger.info("[iceout] Waiting 10 seconds for auth + API completion...")
-            await asyncio.sleep(10)
+            # Wait for Altcha proof-of-work + API calls to complete
+            logger.info("[iceout] Waiting for auth + API completion...")
+            # Poll for intercepted data instead of fixed sleep
+            for _ in range(30):  # Up to 30 seconds
+                if self._intercepted_data:
+                    break
+                await asyncio.sleep(1)
+
 
             # Check if we intercepted the report-feed response
             if self._intercepted_data:
@@ -363,10 +367,10 @@ class IceoutCollector(BaseCollector):
         try:
             return await asyncio.wait_for(
                 self._do_collect(),
-                timeout=120.0  # 2 minute max for entire collection cycle
+                timeout=180.0  # 3 minute max for entire collection cycle
             )
         except asyncio.TimeoutError:
-            logger.error("[iceout] Collection cycle timed out after 120s, resetting browser")
+            logger.error("[iceout] Collection cycle timed out after 180s, resetting browser")
             await self._close_browser()
             return []
 
