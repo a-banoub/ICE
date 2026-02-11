@@ -30,8 +30,17 @@ class RSSCollector(BaseCollector):
         return reports
 
     async def _fetch_feed(self, url: str) -> list[RawReport]:
-        # feedparser is synchronous — run in a thread
-        feed = await asyncio.to_thread(feedparser.parse, url)
+        # feedparser is synchronous — run in a thread.
+        # Wrap in wait_for to prevent zombie threads from hanging feeds
+        # that never respond. The thread continues but we move on.
+        try:
+            feed = await asyncio.wait_for(
+                asyncio.to_thread(feedparser.parse, url),
+                timeout=30.0,
+            )
+        except asyncio.TimeoutError:
+            logger.warning("[rss] Feed timed out after 30s: %s", url)
+            return []
 
         if feed.bozo and not feed.entries:
             logger.warning("[rss] Malformed feed %s: %s", url, feed.bozo_exception)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime, timezone
 
@@ -299,7 +300,11 @@ class DiscordNotifier:
                 username="ICE Activity Monitor",
             )
             webhook.add_embed(embed)
-            response = webhook.execute()
+
+            # webhook.execute() is synchronous (blocking HTTP).
+            # Run in a thread to avoid freezing the entire event loop,
+            # which was causing collectors to stall and then flood on recovery.
+            response = await asyncio.to_thread(webhook.execute)
 
             if response and response.status_code in (200, 204):
                 logger.info(

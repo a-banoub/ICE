@@ -222,10 +222,13 @@ class TwitterCollector(BaseCollector):
         self._context = None
         self._logged_in = False
         self._login_failed = False
+        self._login_failed_at: datetime | None = None  # Cooldown tracking
+        self._login_cooldown_seconds = 1800  # 30 min before retrying failed login
         self._accounts_per_cycle = 5
         self._search_queries_per_cycle = 2
         self._active_accounts: list[str] = []  # Validated active accounts
         self._accounts_validated = False
+        self._polls_since_context_recycle = 0  # Context recycling (memory management)
         # Build locale-aware data
         locale = self.config.locale
         self._geo_re = locale.build_geo_regex()
@@ -321,8 +324,9 @@ class TwitterCollector(BaseCollector):
 
         # Only allow 3 automated attempts before giving up this session
         if self._login_attempts > 3:
-            logger.error("[twitter] Too many login attempts, giving up")
+            logger.error("[twitter] Too many login attempts, giving up (will retry in %ds)", self._login_cooldown_seconds)
             self._login_failed = True
+            self._login_failed_at = datetime.now(timezone.utc)
             return False
 
         page = await self._context.new_page()
@@ -982,6 +986,13 @@ class TwitterCollector(BaseCollector):
         return reports
 
     async def collect(self) -> list[RawReport]:
+        # Recycle context periodically to prevent memory growth
+        self._polls_since_context_recycle += 1
+        if self._polls_since_context_recycle >= 50:
+            logger.info("[twitter] Recycling context to free memory (50 polls reached)")
+            await self._close_browser()
+            self._polls_since_context_recycle = 0
+
         if not await self._ensure_browser():
             return []
 
@@ -990,8 +1001,14 @@ class TwitterCollector(BaseCollector):
         cycle_idx = getattr(self, "_cycle_count", 0)
         self._cycle_count = cycle_idx + 1
 
-        # Reset per-cycle login failure flag so we retry next cycle
-        self._login_failed = False
+        # Only retry login after cooldown period (prevents hammering X login
+        # every 2 minutes when credentials are invalid)
+        if self._login_failed and self._login_failed_at:
+            elapsed = (now - self._login_failed_at).total_seconds()
+            if elapsed >= self._login_cooldown_seconds:
+                logger.info("[twitter] Login cooldown expired, will retry login")
+                self._login_failed = False
+                self._login_attempts = 0
 
         # ── Validate accounts on first run ──────────────────────
         if not self._accounts_validated:

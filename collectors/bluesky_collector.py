@@ -99,17 +99,23 @@ class BlueskyCollector(BaseCollector):
                 if resp.status == 200:
                     data = await resp.json()
                     return data.get("posts", [])
-                else:
+                elif resp.status == 403:
+                    # Known issue: some search queries get 403 from Bluesky
                     logger.debug(
+                        "[bluesky] Search got 403 for '%s' (known issue)", query
+                    )
+                    return []
+                else:
+                    logger.warning(
                         "[bluesky] Search failed for '%s': HTTP %d",
                         query, resp.status
                     )
                     return []
         except asyncio.TimeoutError:
-            logger.debug("[bluesky] Search timeout for '%s'", query)
+            logger.warning("[bluesky] Search timeout for '%s'", query)
             return []
         except Exception as e:
-            logger.debug("[bluesky] Search error for '%s': %s", query, e)
+            logger.warning("[bluesky] Search error for '%s': %s", query, e)
             return []
 
     async def _get_author_feed(self, handle: str, limit: int = 20) -> list[dict]:
@@ -132,7 +138,7 @@ class BlueskyCollector(BaseCollector):
                 if not did:
                     return []
         except Exception as e:
-            logger.debug("[bluesky] Handle resolution error for %s: %s", handle, e)
+            logger.warning("[bluesky] Handle resolution error for %s: %s", handle, e)
             return []
 
         # Get author's feed
@@ -149,13 +155,13 @@ class BlueskyCollector(BaseCollector):
                     data = await resp.json()
                     return [item.get("post", {}) for item in data.get("feed", [])]
                 else:
-                    logger.debug(
+                    logger.warning(
                         "[bluesky] Feed fetch failed for %s: HTTP %d",
                         handle, resp.status
                     )
                     return []
         except Exception as e:
-            logger.debug("[bluesky] Feed error for %s: %s", handle, e)
+            logger.warning("[bluesky] Feed error for %s: %s", handle, e)
             return []
 
     def _parse_post(self, post: dict, now: datetime) -> RawReport | None:

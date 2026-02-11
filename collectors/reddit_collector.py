@@ -77,8 +77,12 @@ class RedditCollector(BaseCollector):
 
         return reports
 
-    async def stop(self) -> None:
+    def stop(self) -> None:
+        """Stop the collector (sync — matches parent signature)."""
         super().stop()
+
+    async def cleanup(self) -> None:
+        """Close the asyncpraw client. Called by main.py at shutdown."""
         if self._reddit:
             await self._reddit.close()
             self._reddit = None

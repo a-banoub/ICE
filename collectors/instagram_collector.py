@@ -81,6 +81,7 @@ class InstagramCollector(BaseCollector):
         self._context = None
         self._accounts_per_cycle = 2  # Check 2 accounts per cycle
         self._cycle_count = 0
+        self._polls_since_context_recycle = 0  # Context recycling (memory management)
         # Build locale-aware data
         locale = self.config.locale
         self._geo_re = locale.build_geo_regex()
@@ -102,10 +103,11 @@ class InstagramCollector(BaseCollector):
     async def _ensure_browser(self) -> bool:
         """Obtain a browser context from the shared pool."""
         if self._context is not None:
-            # Verify the context is still alive
+            # Lightweight liveness check — just verify the context object
+            # is usable without creating/destroying a page (which wastes
+            # resources and can trigger bot detection).
             try:
-                page = await self._context.new_page()
-                await page.close()
+                _ = self._context.pages  # property access, no network call
                 return True
             except Exception:
                 logger.warning("[instagram] Browser context died, resetting")
@@ -419,6 +421,13 @@ class InstagramCollector(BaseCollector):
         """Collect posts from monitored Instagram accounts."""
         if not self._monitored_accounts:
             return []
+
+        # Recycle context periodically to prevent memory growth
+        self._polls_since_context_recycle += 1
+        if self._polls_since_context_recycle >= 50:
+            logger.info("[instagram] Recycling context to free memory (50 polls reached)")
+            await self._close_browser()
+            self._polls_since_context_recycle = 0
 
         if not await self._ensure_browser():
             return []
