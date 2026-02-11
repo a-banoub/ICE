@@ -157,11 +157,11 @@ class IceoutCollector(BaseCollector):
 
         if self._page is not None:
             try:
-                # Check if page is still alive
-                await self._page.title()
+                # Check if page is still alive (with timeout to prevent hang)
+                await asyncio.wait_for(self._page.title(), timeout=5.0)
                 logger.info("[iceout] Existing browser session is alive")
                 return True
-            except Exception:
+            except (asyncio.TimeoutError, Exception):
                 # Page died, reset everything
                 logger.info("[iceout] Existing browser session died, resetting")
                 await self._close_browser()
@@ -279,15 +279,15 @@ class IceoutCollector(BaseCollector):
         try:
             await self._page.goto(
                 ICEOUT_SITE_URL,
-                wait_until="load",
-                timeout=60000,
+                wait_until="domcontentloaded",
+                timeout=30000,
             )
             logger.info("[iceout] Navigation complete, checking for intercepted data")
 
             # Wait for Altcha proof-of-work + API calls to complete
             logger.info("[iceout] Waiting for auth + API completion...")
             # Poll for intercepted data instead of fixed sleep
-            for _ in range(30):  # Up to 30 seconds
+            for _ in range(15):  # Up to 15 seconds
                 if self._intercepted_data:
                     break
                 await asyncio.sleep(1)
@@ -319,14 +319,14 @@ class IceoutCollector(BaseCollector):
                 """
                 result = await asyncio.wait_for(
                     self._page.evaluate(js_code),
-                    timeout=30.0
+                    timeout=15.0
                 )
                 if result is not None:
                     self._authenticated = True
                     logger.info("[iceout] Post-nav fetch successful (%d bytes)", len(result))
                     return bytes(result)
             except asyncio.TimeoutError:
-                logger.warning("[iceout] Post-nav fetch timed out after 30s")
+                logger.warning("[iceout] Post-nav fetch timed out after 15s")
             except Exception as e:
                 logger.warning("[iceout] Post-nav fetch error: %s", e)
 
@@ -346,12 +346,17 @@ class IceoutCollector(BaseCollector):
         """Release our browser context back to the shared pool."""
         try:
             if self._page:
-                await self._page.close()
+                await asyncio.wait_for(self._page.close(), timeout=5.0)
         except Exception:
             pass
 
-        if self._pool and self._context:
-            await self._pool.close_context(self._context)
+        try:
+            if self._pool and self._context:
+                await asyncio.wait_for(
+                    self._pool.close_context(self._context), timeout=5.0
+                )
+        except Exception:
+            pass
 
         self._page = None
         self._context = None
@@ -367,10 +372,10 @@ class IceoutCollector(BaseCollector):
         try:
             return await asyncio.wait_for(
                 self._do_collect(),
-                timeout=180.0  # 3 minute max for entire collection cycle
+                timeout=90.0  # 90 second max for entire collection cycle
             )
         except asyncio.TimeoutError:
-            logger.error("[iceout] Collection cycle timed out after 180s, resetting browser")
+            logger.error("[iceout] Collection cycle timed out after 90s, resetting browser")
             await self._close_browser()
             return []
 

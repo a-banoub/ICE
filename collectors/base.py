@@ -65,7 +65,17 @@ class BaseCollector(ABC):
                 cycle_count += 1
                 logger.info("[%s] Starting collection cycle %d", self.name, cycle_count)
 
-                reports = await self.collect()
+                # Wrap collect() in a timeout so no collector can hang forever
+                try:
+                    reports = await asyncio.wait_for(
+                        self.collect(), timeout=120.0
+                    )
+                except asyncio.TimeoutError:
+                    logger.error(
+                        "[%s] collect() timed out after 120s, skipping cycle",
+                        self.name,
+                    )
+                    reports = []
 
                 # Reset backoff on success
                 backoff = 1
