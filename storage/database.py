@@ -272,6 +272,19 @@ class Database:
         )
         await self._db.commit()
 
+    async def get_notified_source_ids(self) -> set[str]:
+        """Get source_type:source_id keys for all already-notified reports.
+
+        Used by the correlator to prevent re-alerting on reports that
+        were previously notified but got re-collected due to _seen_ids
+        eviction in the collector.
+        """
+        cursor = await self._db.execute(
+            "SELECT source_type, source_id FROM raw_reports WHERE notified = 1"
+        )
+        rows = await cursor.fetchall()
+        return {f"{row['source_type']}:{row['source_id']}" for row in rows}
+
     async def get_notified_cluster_report_ids(
         self, cluster_id: int
     ) -> set[int]:

@@ -279,14 +279,37 @@ class ICEMonitor:
         """Periodically run the correlation algorithm and send notifications.
 
         Handles both NEW incidents and UPDATES to existing incidents.
+        Rate-limits to MAX_NOTIFICATIONS_PER_CYCLE to prevent flooding
+        when a collector recovers after a long stall and dumps many
+        reports at once.
         """
+        MAX_NOTIFICATIONS_PER_CYCLE = 5
+
         while not self._shutdown_event.is_set():
             try:
                 await asyncio.sleep(self.config.correlation_check_interval)
 
                 incidents = await self.correlator.run_cycle()
 
+                if len(incidents) > MAX_NOTIFICATIONS_PER_CYCLE:
+                    logger.warning(
+                        "Rate limiting: %d incidents this cycle, capping at %d. "
+                        "Remaining will be picked up next cycle.",
+                        len(incidents),
+                        MAX_NOTIFICATIONS_PER_CYCLE,
+                    )
+
+                sent_count = 0
                 for incident in incidents:
+                    if sent_count >= MAX_NOTIFICATIONS_PER_CYCLE:
+                        # Don't mark remaining as notified — they'll be
+                        # picked up as "new" or "update" on the next cycle
+                        logger.info(
+                            "Deferred %d incidents to next cycle",
+                            len(incidents) - sent_count,
+                        )
+                        break
+
                     success = await self.notifier.send(incident)
                     ntype = incident.notification_type
                     await self.db.log_notification(
@@ -304,12 +327,16 @@ class ICEMonitor:
                         await self.db.mark_cluster_notified(incident.cluster_id)
 
                     if success:
+                        sent_count += 1
                         logger.info(
                             "%s notification sent: %s (%d sources)",
                             ntype.upper(),
                             incident.primary_location,
                             incident.source_count,
                         )
+                        # Small delay between sends to avoid Discord rate limits
+                        if sent_count < len(incidents):
+                            await asyncio.sleep(2)
 
                 # Expire old uncorroborated reports
                 expiry_cutoff = datetime.now(timezone.utc) - timedelta(

@@ -117,6 +117,8 @@ class IceoutCollector(BaseCollector):
         self._intercepted_data: list[bytes] = []
         self._polls_since_full_auth = 0  # Track polls since last full navigation
         self._polls_since_context_recycle = 0  # Track for memory management
+        self._consecutive_failures = 0  # Track failures for recovery throttling
+        self._last_success_time: datetime | None = None
         # Locale-aware geo filter — supports multiple centers for multi-locale
         locale = self.config.locale
         self._centers = locale.centers
@@ -366,18 +368,37 @@ class IceoutCollector(BaseCollector):
         return self.config.iceout_poll_interval
 
     async def collect(self) -> list[RawReport]:
-        logger.info("[iceout] Starting collection cycle")
+        logger.info("[iceout] Starting collection cycle (failures=%d)", self._consecutive_failures)
 
         # Wrap entire collection in a timeout to prevent indefinite hangs
         try:
-            return await asyncio.wait_for(
+            reports = await asyncio.wait_for(
                 self._do_collect(),
                 timeout=90.0  # 90 second max for entire collection cycle
             )
         except asyncio.TimeoutError:
-            logger.error("[iceout] Collection cycle timed out after 90s, resetting browser")
+            self._consecutive_failures += 1
+            logger.error(
+                "[iceout] Collection cycle timed out after 90s (failure #%d), resetting browser",
+                self._consecutive_failures,
+            )
             await self._close_browser()
             return []
+
+        if reports:
+            if self._consecutive_failures > 0:
+                logger.warning(
+                    "[iceout] Recovered after %d consecutive failures, returning %d reports",
+                    self._consecutive_failures,
+                    len(reports),
+                )
+            self._consecutive_failures = 0
+            self._last_success_time = datetime.now(timezone.utc)
+        else:
+            # Don't increment failure counter for empty results (that's normal)
+            pass
+
+        return reports
 
     async def _do_collect(self) -> list[RawReport]:
         """Internal collection logic with timeout wrapper."""
@@ -397,11 +418,17 @@ class IceoutCollector(BaseCollector):
         try:
             raw_bytes = await self._navigate_and_fetch()
             if raw_bytes is None:
+                self._consecutive_failures += 1
                 logger.warning(
-                    "[iceout] No data received from API (auth: %s, polls_since_auth: %d)",
+                    "[iceout] No data received from API (auth: %s, polls_since_auth: %d, failure #%d)",
                     self._authenticated,
-                    self._polls_since_full_auth
+                    self._polls_since_full_auth,
+                    self._consecutive_failures,
                 )
+                # After 3 consecutive failures, force a full browser reset
+                if self._consecutive_failures >= 3:
+                    logger.warning("[iceout] %d consecutive failures, resetting browser", self._consecutive_failures)
+                    await self._close_browser()
                 return []
             logger.info("[iceout] Received %d bytes from API (auth: %s)", len(raw_bytes), self._authenticated)
 

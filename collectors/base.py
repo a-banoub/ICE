@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from abc import ABC, abstractmethod
+from collections import OrderedDict
 from datetime import datetime, timedelta, timezone
 
 from config import Config
@@ -24,7 +25,7 @@ class BaseCollector(ABC):
         self.config = config
         self.report_queue = report_queue
         self.is_running = False
-        self._seen_ids: set[str] = set()
+        self._seen_ids: OrderedDict[str, None] = OrderedDict()
 
     @abstractmethod
     async def collect(self) -> list[RawReport]:
@@ -37,16 +38,20 @@ class BaseCollector(ABC):
         ...
 
     def _is_new(self, source_id: str) -> bool:
-        """Check if we've already seen this source_id this session."""
+        """Check if we've already seen this source_id this session.
+
+        Uses OrderedDict to maintain insertion order so that when we trim,
+        we always evict the OLDEST entries — not random ones that might
+        include recent IDs. This prevents the flood-on-trim bug where
+        losing recent IDs caused mass re-collection and duplicate notifications.
+        """
         if source_id in self._seen_ids:
             return False
-        self._seen_ids.add(source_id)
-        # Cap the in-memory set to avoid unbounded growth
-        # Reduced from 10K to 2K to save memory on low-RAM servers
-        if len(self._seen_ids) > 2_000:
-            # Keep the most recent half
-            trimmed = list(self._seen_ids)[-1_000:]
-            self._seen_ids = set(trimmed)
+        self._seen_ids[source_id] = None
+        # Evict oldest entries when we exceed the cap.
+        # OrderedDict preserves insertion order, so we pop from the front.
+        while len(self._seen_ids) > 5_000:
+            self._seen_ids.popitem(last=False)
         return True
 
     async def run(self) -> None:

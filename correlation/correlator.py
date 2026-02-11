@@ -71,8 +71,14 @@ class Correlator:
         """Run correlation for a single city's reports."""
         logger.info("Correlating %d reports for city: %s", len(reports), city)
 
-        # Separate reports into already-clustered and unclustered
-        unclustered = [r for r in reports if r.cluster_id is None]
+        # Separate reports into already-clustered and unclustered.
+        # Reports that are already notified but have no cluster_id are
+        # orphaned — they were notified in a previous run but their cluster
+        # was cleaned up. These should NOT be treated as unclustered.
+        unclustered = [
+            r for r in reports
+            if r.cluster_id is None
+        ]
         clustered_by_id: dict[int, list[ProcessedReport]] = {}
         for r in reports:
             if r.cluster_id is not None:
@@ -262,19 +268,28 @@ class Correlator:
         logger.info("Checking %d reports for high-priority single-source alerts", len(reports))
         incidents = []
 
+        # Get all already-notified source_ids to prevent re-alerting on
+        # reports we've already sent notifications for (even if they have
+        # a new DB row due to _seen_ids eviction in the collector).
+        notified_sources = await self.db.get_notified_source_ids()
+
         for report in reports:
-            logger.info(
-                "  Checking report: [%s] cluster_id=%s",
-                report.source_type, report.cluster_id
+            logger.debug(
+                "  Checking report: [%s] cluster_id=%s id=%s",
+                report.source_type, report.cluster_id, report.id
             )
             # Only high-priority sources qualify
             if report.source_type not in HIGH_PRIORITY_SOURCES:
-                logger.info("    -> Skipping: not high-priority source")
                 continue
 
             # Skip if already clustered
             if report.cluster_id is not None:
-                logger.info("    -> Skipping: already clustered")
+                continue
+
+            # Skip if this report was already notified (prevent flood on re-collection)
+            source_key = f"{report.source_type}:{report.source_id}"
+            if source_key in notified_sources:
+                logger.debug("    -> Skipping: already notified (source_key=%s)", source_key)
                 continue
 
             logger.info("    -> CREATING single-source alert for %s", report.source_type)
