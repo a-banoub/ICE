@@ -322,6 +322,12 @@ class Correlator:
             if report_ids:
                 await self.db.assign_reports_to_cluster(report_ids, cluster_id)
                 report.cluster_id = cluster_id
+                # Mark reports as notified to prevent zombie re-correlation
+                for rid in report_ids:
+                    await self.db._db.execute(
+                        "UPDATE raw_reports SET notified = 1 WHERE id = ?", (rid,)
+                    )
+                await self.db._db.commit()
 
             incident = CorroboratedIncident(
                 cluster_id=cluster_id,
@@ -531,6 +537,12 @@ class Correlator:
 
         if report_ids:
             await self.db.assign_reports_to_cluster(report_ids, cluster_id)
+            # Mark reports as notified to prevent zombie re-correlation
+            for rid in report_ids:
+                await self.db._db.execute(
+                    "UPDATE raw_reports SET notified = 1 WHERE id = ?", (rid,)
+                )
+            await self.db._db.commit()
 
         return CorroboratedIncident(
             cluster_id=cluster_id,

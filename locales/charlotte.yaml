@@ -1,0 +1,117 @@
+# ============================================================
+# Charlotte, NC — Locale Configuration
+# ============================================================
+
+name: charlotte
+display_name: "Charlotte Metro"
+timezone: America/New_York
+
+# ── Geographic center & radius ────────────────────────────────
+center:
+  lat: 35.2271
+  lon: -80.8431
+radius_km: 45.0
+
+# ── Fallback location strings ────────────────────────────────
+fallback_location: "Charlotte area"
+fallback_location_unspecified: "Charlotte (unspecified)"
+
+# ── Geodata files ─────────────────────────────────────────────
+neighborhoods_file: ""
+landmarks_file: ""
+
+# ── Geographic keywords ──────────────────────────────────────
+geo_keywords:
+  - charlotte
+  - north carolina
+  - mecklenburg county
+  - gaston county
+  - union county
+  - metro charlotte
+  - uptown charlotte
+  - south end
+  - noda
+  - east charlotte
+  - west charlotte
+  - hidden valley
+  - university city
+  - ballantyne
+  - steele creek
+  - gastonia
+  - concord
+  - kannapolis
+  - huntersville
+  - matthews
+  - mint hill
+  - monroe
+  - indian trail
+  - charlotte douglas airport
+  - uncc
+  - bank of america stadium
+
+geo_city_names:
+  - charlotte
+  - north carolina
+  - nc
+  - mecklenburg county
+  - gaston county
+  - union county
+  - uptown charlotte
+  - noda
+  - hidden valley
+  - university city
+  - ballantyne
+  - steele creek
+  - gastonia
+  - concord
+  - kannapolis
+  - huntersville
+  - matthews
+  - mint hill
+  - monroe
+  - indian trail
+
+# ── RSS feeds ────────────────────────────────────────────────
+rss_feeds: []
+
+# ── Reddit ───────────────────────────────────────────────────
+subreddits:
+  - Charlotte
+  - immigration
+
+# ── Bluesky ──────────────────────────────────────────────────
+bluesky:
+  search_queries:
+    - "ICE Charlotte"
+    - "ICE North Carolina"
+    - "immigration raid Charlotte"
+    - "deportation North Carolina"
+  monitored_accounts: []
+  trusted_accounts: []
+
+# ── Twitter/X ────────────────────────────────────────────────
+twitter:
+  search_queries:
+    - '(ICE OR "immigration enforcement") ("Charlotte" OR "Mecklenburg County") -is:retweet'
+    - '(ICE raid OR "ICE agents" OR deportation) North Carolina -is:retweet'
+    - '("federal agents" OR "unmarked van" OR "ICE sighting") "Charlotte" -is:retweet'
+    - '(detained OR detention OR "immigration arrest") "Charlotte" -is:retweet'
+  reporter_accounts: []
+  activist_accounts:
+    - UnitedWeDream
+    - ConMijente
+  news_accounts: []
+  official_accounts: []
+
+# ── Instagram ────────────────────────────────────────────────
+instagram:
+  monitored_accounts: []
+
+# ── Discord display ──────────────────────────────────────────
+discord:
+  bot_description: "Charlotte ICE Activity Monitor"
+  footer_text: "Charlotte ICE Monitor | Stay safe, know your rights"
+  subscribe_message: "ICE activity is reported in the Charlotte area"
+  help_description: >-
+    This bot monitors multiple sources for ICE enforcement activity
+    in the Charlotte metro area and sends alerts to subscribed channels.

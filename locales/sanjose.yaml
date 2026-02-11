@@ -1,0 +1,116 @@
+# ============================================================
+# San Jose, CA — Locale Configuration
+# ============================================================
+
+name: sanjose
+display_name: "San Jose Metro"
+timezone: America/Los_Angeles
+
+# ── Geographic center & radius ────────────────────────────────
+center:
+  lat: 37.3382
+  lon: -121.8863
+radius_km: 40.0
+
+# ── Fallback location strings ────────────────────────────────
+fallback_location: "San Jose area"
+fallback_location_unspecified: "San Jose (unspecified)"
+
+# ── Geodata files ─────────────────────────────────────────────
+neighborhoods_file: ""
+landmarks_file: ""
+
+# ── Geographic keywords ──────────────────────────────────────
+geo_keywords:
+  - san jose
+  - sanjose
+  - california
+  - santa clara county
+  - metro san jose
+  - downtown san jose
+  - east san jose
+  - alum rock
+  - mayfair
+  - santana row
+  - willow glen
+  - japantown
+  - milpitas
+  - sunnyvale
+  - santa clara
+  - mountain view
+  - gilroy
+  - morgan hill
+  - campbell
+  - los gatos
+  - cupertino
+  - palo alto
+  - san jose airport
+  - sjsu
+  - stanford
+
+geo_city_names:
+  - san jose
+  - sanjose
+  - california
+  - ca
+  - santa clara county
+  - alum rock
+  - mayfair
+  - santana row
+  - willow glen
+  - japantown
+  - milpitas
+  - sunnyvale
+  - santa clara
+  - mountain view
+  - gilroy
+  - morgan hill
+  - campbell
+  - los gatos
+  - cupertino
+  - palo alto
+
+# ── RSS feeds ────────────────────────────────────────────────
+rss_feeds: []
+
+# ── Reddit ───────────────────────────────────────────────────
+subreddits:
+  - SanJose
+  - immigration
+
+# ── Bluesky ──────────────────────────────────────────────────
+bluesky:
+  search_queries:
+    - "ICE San Jose"
+    - "ICE California"
+    - "immigration raid San Jose"
+    - "deportation California"
+  monitored_accounts: []
+  trusted_accounts: []
+
+# ── Twitter/X ────────────────────────────────────────────────
+twitter:
+  search_queries:
+    - '(ICE OR "immigration enforcement") ("San Jose" OR "Santa Clara County") -is:retweet'
+    - '(ICE raid OR "ICE agents" OR deportation) California -is:retweet'
+    - '("federal agents" OR "unmarked van" OR "ICE sighting") "San Jose" -is:retweet'
+    - '(detained OR detention OR "immigration arrest") "San Jose" -is:retweet'
+  reporter_accounts: []
+  activist_accounts:
+    - UnitedWeDream
+    - ConMijente
+  news_accounts: []
+  official_accounts: []
+
+# ── Instagram ────────────────────────────────────────────────
+instagram:
+  monitored_accounts: []
+
+# ── Discord display ──────────────────────────────────────────
+discord:
+  bot_description: "San Jose ICE Activity Monitor"
+  footer_text: "San Jose ICE Monitor | Stay safe, know your rights"
+  subscribe_message: "ICE activity is reported in the San Jose area"
+  help_description: >-
+    This bot monitors multiple sources for ICE enforcement activity
+    in the San Jose metro area and sends alerts to subscribed channels.

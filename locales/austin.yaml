@@ -1,0 +1,118 @@
+# ============================================================
+# Austin, TX — Locale Configuration
+# ============================================================
+
+name: austin
+display_name: "Austin Metro"
+timezone: America/Chicago
+
+# ── Geographic center & radius ────────────────────────────────
+center:
+  lat: 30.2672
+  lon: -97.7431
+radius_km: 45.0
+
+# ── Fallback location strings ────────────────────────────────
+fallback_location: "Austin area"
+fallback_location_unspecified: "Austin (unspecified)"
+
+# ── Geodata files ─────────────────────────────────────────────
+neighborhoods_file: ""
+landmarks_file: ""
+
+# ── Geographic keywords ──────────────────────────────────────
+geo_keywords:
+  - austin
+  - texas
+  - travis county
+  - williamson county
+  - hays county
+  - metro austin
+  - downtown austin
+  - east austin
+  - south austin
+  - north austin
+  - rundberg
+  - riverside
+  - montopolis
+  - dove springs
+  - st johns
+  - pflugerville
+  - round rock
+  - cedar park
+  - georgetown
+  - san marcos
+  - kyle
+  - buda
+  - del valle
+  - manor
+  - austin-bergstrom airport
+  - ut austin
+  - state capitol
+
+geo_city_names:
+  - austin
+  - texas
+  - tx
+  - travis county
+  - williamson county
+  - hays county
+  - rundberg
+  - riverside
+  - montopolis
+  - dove springs
+  - st johns
+  - pflugerville
+  - round rock
+  - cedar park
+  - georgetown
+  - san marcos
+  - kyle
+  - buda
+  - del valle
+  - manor
+
+# ── RSS feeds ────────────────────────────────────────────────
+rss_feeds: []
+
+# ── Reddit ───────────────────────────────────────────────────
+subreddits:
+  - Austin
+  - immigration
+
+# ── Bluesky ──────────────────────────────────────────────────
+bluesky:
+  search_queries:
+    - "ICE Austin"
+    - "ICE Texas"
+    - "immigration raid Austin"
+    - "deportation Texas"
+  monitored_accounts: []
+  trusted_accounts: []
+
+# ── Twitter/X ────────────────────────────────────────────────
+twitter:
+  search_queries:
+    - '(ICE OR "immigration enforcement") ("Austin" OR "Travis County") -is:retweet'
+    - '(ICE raid OR "ICE agents" OR deportation) Texas -is:retweet'
+    - '("federal agents" OR "unmarked van" OR "ICE sighting") "Austin" -is:retweet'
+    - '(detained OR detention OR "immigration arrest") "Austin" -is:retweet'
+  reporter_accounts: []
+  activist_accounts:
+    - UnitedWeDream
+    - ConMijente
+  news_accounts: []
+  official_accounts: []
+
+# ── Instagram ────────────────────────────────────────────────
+instagram:
+  monitored_accounts: []
+
+# ── Discord display ──────────────────────────────────────────
+discord:
+  bot_description: "Austin ICE Activity Monitor"
+  footer_text: "Austin ICE Monitor | Stay safe, know your rights"
+  subscribe_message: "ICE activity is reported in the Austin area"
+  help_description: >-
+    This bot monitors multiple sources for ICE enforcement activity
+    in the Austin metro area and sends alerts to subscribed channels.

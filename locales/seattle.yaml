@@ -1,0 +1,127 @@
+# ============================================================
+# Seattle, WA — Locale Configuration
+# ============================================================
+
+name: seattle
+display_name: "Seattle Metro"
+timezone: America/Los_Angeles
+
+# ── Geographic center & radius ────────────────────────────────
+center:
+  lat: 47.6062
+  lon: -122.3321
+radius_km: 50.0
+
+# ── Fallback location strings ────────────────────────────────
+fallback_location: "Seattle area"
+fallback_location_unspecified: "Seattle (unspecified)"
+
+# ── Geodata files ─────────────────────────────────────────────
+neighborhoods_file: ""
+landmarks_file: ""
+
+# ── Geographic keywords ──────────────────────────────────────
+geo_keywords:
+  - seattle
+  - washington
+  - king county
+  - snohomish county
+  - pierce county
+  - metro seattle
+  - downtown seattle
+  - capitol hill
+  - international district
+  - beacon hill
+  - rainier valley
+  - columbia city
+  - georgetown
+  - white center
+  - burien
+  - tukwila
+  - seatac
+  - renton
+  - kent
+  - auburn
+  - federal way
+  - tacoma
+  - everett
+  - lynnwood
+  - bellevue
+  - redmond
+  - kirkland
+  - sea-tac airport
+  - pike place
+  - uw
+
+geo_city_names:
+  - seattle
+  - washington
+  - wa
+  - king county
+  - snohomish county
+  - pierce county
+  - capitol hill
+  - international district
+  - beacon hill
+  - rainier valley
+  - columbia city
+  - georgetown
+  - white center
+  - burien
+  - tukwila
+  - seatac
+  - renton
+  - kent
+  - auburn
+  - federal way
+  - tacoma
+  - everett
+  - lynnwood
+  - bellevue
+  - redmond
+  - kirkland
+
+# ── RSS feeds ────────────────────────────────────────────────
+rss_feeds: []
+
+# ── Reddit ───────────────────────────────────────────────────
+subreddits:
+  - Seattle
+  - immigration
+
+# ── Bluesky ──────────────────────────────────────────────────
+bluesky:
+  search_queries:
+    - "ICE Seattle"
+    - "ICE Washington"
+    - "immigration raid Seattle"
+    - "deportation Washington"
+  monitored_accounts: []
+  trusted_accounts: []
+
+# ── Twitter/X ────────────────────────────────────────────────
+twitter:
+  search_queries:
+    - '(ICE OR "immigration enforcement") ("Seattle" OR "King County") -is:retweet'
+    - '(ICE raid OR "ICE agents" OR deportation) Washington -is:retweet'
+    - '("federal agents" OR "unmarked van" OR "ICE sighting") "Seattle" -is:retweet'
+    - '(detained OR detention OR "immigration arrest") "Seattle" -is:retweet'
+  reporter_accounts: []
+  activist_accounts:
+    - UnitedWeDream
+    - ConMijente
+  news_accounts: []
+  official_accounts: []
+
+# ── Instagram ────────────────────────────────────────────────
+instagram:
+  monitored_accounts: []
+
+# ── Discord display ──────────────────────────────────────────
+discord:
+  bot_description: "Seattle ICE Activity Monitor"
+  footer_text: "Seattle ICE Monitor | Stay safe, know your rights"
+  subscribe_message: "ICE activity is reported in the Seattle area"
+  help_description: >-
+    This bot monitors multiple sources for ICE enforcement activity
+    in the Seattle metro area and sends alerts to subscribed channels.

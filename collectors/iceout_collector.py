@@ -282,14 +282,14 @@ class IceoutCollector(BaseCollector):
             await self._page.goto(
                 ICEOUT_SITE_URL,
                 wait_until="domcontentloaded",
-                timeout=30000,
+                timeout=15000,
             )
             logger.info("[iceout] Navigation complete, checking for intercepted data")
 
             # Wait for Altcha proof-of-work + API calls to complete
             logger.info("[iceout] Waiting for auth + API completion...")
             # Poll for intercepted data instead of fixed sleep
-            for _ in range(15):  # Up to 15 seconds
+            for _ in range(10):  # Up to 10 seconds
                 if self._intercepted_data:
                     break
                 await asyncio.sleep(1)
@@ -321,14 +321,14 @@ class IceoutCollector(BaseCollector):
                 """
                 result = await asyncio.wait_for(
                     self._page.evaluate(js_code),
-                    timeout=15.0
+                    timeout=10.0
                 )
                 if result is not None:
                     self._authenticated = True
                     logger.info("[iceout] Post-nav fetch successful (%d bytes)", len(result))
                     return bytes(result)
             except asyncio.TimeoutError:
-                logger.warning("[iceout] Post-nav fetch timed out after 15s")
+                logger.warning("[iceout] Post-nav fetch timed out after 10s")
             except Exception as e:
                 logger.warning("[iceout] Post-nav fetch error: %s", e)
 
@@ -370,19 +370,38 @@ class IceoutCollector(BaseCollector):
     async def collect(self) -> list[RawReport]:
         logger.info("[iceout] Starting collection cycle (failures=%d)", self._consecutive_failures)
 
+        # Exponential backoff on consecutive failures — don't hammer iceout.org
+        if self._consecutive_failures >= 3:
+            backoff_seconds = min(self._consecutive_failures * 30, 300)
+            logger.warning(
+                "[iceout] Backing off %ds due to %d consecutive failures",
+                backoff_seconds,
+                self._consecutive_failures,
+            )
+            await asyncio.sleep(backoff_seconds)
+
         # Wrap entire collection in a timeout to prevent indefinite hangs
         try:
             reports = await asyncio.wait_for(
                 self._do_collect(),
-                timeout=90.0  # 90 second max for entire collection cycle
+                timeout=45.0  # 45 second max for entire collection cycle
             )
         except asyncio.TimeoutError:
             self._consecutive_failures += 1
-            logger.error(
-                "[iceout] Collection cycle timed out after 90s (failure #%d), resetting browser",
-                self._consecutive_failures,
-            )
-            await self._close_browser()
+            # Don't reset browser on every timeout — keep context alive so
+            # the next cycle can try the fast direct-fetch path instead of
+            # doing a full re-navigation. Only reset after 5+ failures.
+            if self._consecutive_failures >= 5:
+                logger.error(
+                    "[iceout] Collection timed out after 45s (failure #%d), resetting browser",
+                    self._consecutive_failures,
+                )
+                await self._close_browser()
+            else:
+                logger.warning(
+                    "[iceout] Collection timed out after 45s (failure #%d), keeping context",
+                    self._consecutive_failures,
+                )
             return []
 
         if reports:
@@ -425,8 +444,8 @@ class IceoutCollector(BaseCollector):
                     self._polls_since_full_auth,
                     self._consecutive_failures,
                 )
-                # After 3 consecutive failures, force a full browser reset
-                if self._consecutive_failures >= 3:
+                # After 5 consecutive failures, force a full browser reset
+                if self._consecutive_failures >= 5:
                     logger.warning("[iceout] %d consecutive failures, resetting browser", self._consecutive_failures)
                     await self._close_browser()
                 return []
@@ -508,10 +527,19 @@ class IceoutCollector(BaseCollector):
             location_desc = item.get("location_description", "Unknown location")
 
             # Build readable text from structured data
+            # Format incident time in a human-readable local format
+            # using Discord's timestamp markup so it renders in each
+            # viewer's local timezone
+            if incident_time.tzinfo is not None:
+                ts_unix = int(incident_time.timestamp())
+                time_display = f"<t:{ts_unix}:f>"  # Discord relative format
+            else:
+                time_display = incident_time_str or "unknown"
+
             text = (
                 f"[Iceout.org {category} Report] {location_desc}\n"
                 f"Status: {status}\n"
-                f"Incident time: {incident_time_str or 'unknown'}"
+                f"Incident time: {time_display}"
             )
 
             # Build a report-specific URL. Iceout.org is an SPA, so

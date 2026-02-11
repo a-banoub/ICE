@@ -1,0 +1,131 @@
+# ============================================================
+# Las Vegas, NV — Locale Configuration
+# ============================================================
+
+name: lasvegas
+display_name: "Las Vegas Metro"
+timezone: America/Los_Angeles
+
+# ── Geographic center & radius ────────────────────────────────
+center:
+  lat: 36.1699
+  lon: -115.1398
+radius_km: 50.0
+
+# ── Fallback location strings ────────────────────────────────
+fallback_location: "Las Vegas area"
+fallback_location_unspecified: "Las Vegas (unspecified)"
+
+# ── Geodata files ─────────────────────────────────────────────
+neighborhoods_file: ""
+landmarks_file: ""
+
+# ── Geographic keywords ──────────────────────────────────────
+geo_keywords:
+  - las vegas
+  - lasvegas
+  - nevada
+  - clark county
+  - metro las vegas
+  - the strip
+  - downtown las vegas
+  - summerlin
+  - henderson
+  - north las vegas
+  - paradise
+  - spring valley
+  - enterprise
+  - sunrise manor
+  - winchester
+  - whitney
+  - nellis afb
+  - boulder city
+  - mesquite
+  - pahrump
+  - centennial hills
+  - aliante
+  - anthem
+  - green valley
+  - lake las vegas
+  - chinatown
+  - arts district
+  - fremont street
+  - east las vegas
+  - west las vegas
+  - mccarran airport
+  - harry reid airport
+  - las vegas boulevard
+  - unlv
+
+geo_city_names:
+  - las vegas
+  - lasvegas
+  - nevada
+  - nv
+  - clark county
+  - the strip
+  - summerlin
+  - henderson
+  - paradise
+  - spring valley
+  - enterprise
+  - sunrise manor
+  - winchester
+  - whitney
+  - nellis afb
+  - boulder city
+  - mesquite
+  - pahrump
+  - centennial hills
+  - aliante
+  - anthem
+  - green valley
+  - lake las vegas
+  - chinatown
+  - arts district
+  - fremont street
+
+# ── RSS feeds ────────────────────────────────────────────────
+rss_feeds: []
+
+# ── Reddit ───────────────────────────────────────────────────
+subreddits:
+  - vegaslocals
+  - immigration
+
+# ── Bluesky ──────────────────────────────────────────────────
+bluesky:
+  search_queries:
+    - "ICE Las Vegas"
+    - "ICE Nevada"
+    - "immigration raid Las Vegas"
+    - "deportation Nevada"
+  monitored_accounts: []
+  trusted_accounts: []
+
+# ── Twitter/X ────────────────────────────────────────────────
+twitter:
+  search_queries:
+    - '(ICE OR "immigration enforcement") ("Las Vegas" OR "Clark County") -is:retweet'
+    - '(ICE raid OR "ICE agents" OR deportation) Nevada -is:retweet'
+    - '("federal agents" OR "unmarked van" OR "ICE sighting") "Las Vegas" -is:retweet'
+    - '(detained OR detention OR "immigration arrest") "Las Vegas" -is:retweet'
+  reporter_accounts: []
+  activist_accounts:
+    - UnitedWeDream
+    - ConMijente
+  news_accounts: []
+  official_accounts: []
+
+# ── Instagram ────────────────────────────────────────────────
+instagram:
+  monitored_accounts: []
+
+# ── Discord display ──────────────────────────────────────────
+discord:
+  bot_description: "Las Vegas ICE Activity Monitor"
+  footer_text: "Las Vegas ICE Monitor | Stay safe, know your rights"
+  subscribe_message: "ICE activity is reported in the Las Vegas area"
+  help_description: >-
+    This bot monitors multiple sources for ICE enforcement activity
+    in the Las Vegas metro area and sends alerts to subscribed channels.

@@ -94,15 +94,6 @@ class ICEMonitor:
         else:
             logger.info("Iceout.org collector disabled")
 
-        # Twitter (unofficial scraping)
-        if self.config.twitter_enabled:
-            from collectors.twitter_collector import TwitterCollector
-            self.collectors.append(
-                TwitterCollector(self.config, self.report_queue)
-            )
-            logger.info("Twitter collector enabled (unofficial scraping)")
-        else:
-            logger.info("Twitter collector disabled")
 
         # Bluesky (free public API, no auth needed)
         if getattr(self.config, "bluesky_enabled", True):
@@ -124,15 +115,6 @@ class ICEMonitor:
         else:
             logger.info("StopICE.net collector disabled")
 
-        # Instagram (Playwright scraping, no auth needed for public profiles)
-        if getattr(self.config, "instagram_enabled", True):
-            from collectors.instagram_collector import InstagramCollector
-            self.collectors.append(
-                InstagramCollector(self.config, self.report_queue)
-            )
-            logger.info("Instagram collector enabled (Playwright scraping)")
-        else:
-            logger.info("Instagram collector disabled")
 
     def _get_location_extractor(self):
         """Lazy-load the location extractor to avoid slow startup if not needed."""
@@ -279,39 +261,77 @@ class ICEMonitor:
         """Periodically run the correlation algorithm and send notifications.
 
         Handles both NEW incidents and UPDATES to existing incidents.
-        Rate-limits to MAX_NOTIFICATIONS_PER_CYCLE to prevent flooding
-        when a collector recovers after a long stall and dumps many
-        reports at once.
+
+        Flood prevention uses a sliding-window rate limiter:
+        - Max 3 notifications per cycle
+        - Max 10 notifications per 10-minute window
+        - If the window limit is hit, remaining incidents are silently
+          marked as notified (cluster + reports) WITHOUT sending to
+          Discord.  This prevents the post-stall flood where hours of
+          accumulated reports blast everyone at once.
         """
-        MAX_NOTIFICATIONS_PER_CYCLE = 5
+        MAX_PER_CYCLE = 3
+        MAX_PER_WINDOW = 10
+        WINDOW_SECONDS = 600  # 10 minutes
+        _recent_sends: list[datetime] = []
 
         while not self._shutdown_event.is_set():
             try:
                 await asyncio.sleep(self.config.correlation_check_interval)
 
                 incidents = await self.correlator.run_cycle()
+                if not incidents:
+                    continue
 
-                if len(incidents) > MAX_NOTIFICATIONS_PER_CYCLE:
+                # Sort by most recent first so rate limiting suppresses
+                # older incidents, not newer ones
+                incidents.sort(key=lambda i: i.latest_report, reverse=True)
+
+                # Prune sliding window
+                now = datetime.now(timezone.utc)
+                cutoff = now - timedelta(seconds=WINDOW_SECONDS)
+                _recent_sends[:] = [t for t in _recent_sends if t > cutoff]
+
+                window_remaining = MAX_PER_WINDOW - len(_recent_sends)
+                cycle_limit = min(MAX_PER_CYCLE, window_remaining)
+
+                if len(incidents) > cycle_limit:
                     logger.warning(
-                        "Rate limiting: %d incidents this cycle, capping at %d. "
-                        "Remaining will be picked up next cycle.",
+                        "Rate limiting: %d incidents this cycle, sending %d "
+                        "(window: %d/%d used). Excess will be marked notified silently.",
                         len(incidents),
-                        MAX_NOTIFICATIONS_PER_CYCLE,
+                        max(cycle_limit, 0),
+                        len(_recent_sends),
+                        MAX_PER_WINDOW,
                     )
 
                 sent_count = 0
                 for incident in incidents:
-                    if sent_count >= MAX_NOTIFICATIONS_PER_CYCLE:
-                        # Don't mark remaining as notified — they'll be
-                        # picked up as "new" or "update" on the next cycle
-                        logger.info(
-                            "Deferred %d incidents to next cycle",
-                            len(incidents) - sent_count,
+                    ntype = incident.notification_type
+
+                    if sent_count >= cycle_limit:
+                        # Silently mark cluster + reports as notified so
+                        # they don't come back next cycle as a flood.
+                        if ntype == "new":
+                            await self.db.mark_cluster_notified(incident.cluster_id)
+                        await self.db.log_notification(
+                            cluster_id=incident.cluster_id,
+                            embed_content={
+                                "location": incident.primary_location,
+                                "type": f"{ntype}_suppressed",
+                                "source_count": incident.source_count,
+                            },
+                            success=True,
                         )
-                        break
+                        logger.info(
+                            "SUPPRESSED %s notification: %s (%d sources) — rate limited",
+                            ntype.upper(),
+                            incident.primary_location,
+                            incident.source_count,
+                        )
+                        continue
 
                     success = await self.notifier.send(incident)
-                    ntype = incident.notification_type
                     await self.db.log_notification(
                         cluster_id=incident.cluster_id,
                         embed_content={
@@ -321,13 +341,12 @@ class ICEMonitor:
                         },
                         success=success,
                     )
-                    # Only mark_cluster_notified for new incidents
-                    # (updates already have the cluster marked)
                     if success and ntype == "new":
                         await self.db.mark_cluster_notified(incident.cluster_id)
 
                     if success:
                         sent_count += 1
+                        _recent_sends.append(now)
                         logger.info(
                             "%s notification sent: %s (%d sources)",
                             ntype.upper(),
@@ -335,7 +354,7 @@ class ICEMonitor:
                             incident.source_count,
                         )
                         # Small delay between sends to avoid Discord rate limits
-                        if sent_count < len(incidents):
+                        if sent_count < cycle_limit:
                             await asyncio.sleep(2)
 
                 # Expire old uncorroborated reports

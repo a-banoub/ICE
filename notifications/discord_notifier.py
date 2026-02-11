@@ -48,16 +48,6 @@ def _get_color(incident: CorroboratedIncident) -> str:
     return COLOR_NEW_LOW
 
 
-def _format_time_local(dt: datetime, tz_name: str) -> str:
-    """Format a UTC datetime in the locale's timezone."""
-    from zoneinfo import ZoneInfo
-    local_dt = dt.astimezone(ZoneInfo(tz_name))
-    # %-I is Linux-only; use %I and strip leading zero for portability
-    raw = local_dt.strftime("%I:%M %p")
-    if raw.startswith("0"):
-        raw = raw[1:]
-    return raw.lower()
-
 
 class DiscordNotifier:
     """Sends notifications to Discord via webhook and/or bot.
@@ -100,10 +90,13 @@ class DiscordNotifier:
         )
 
         # Topline summary — the most important info in 1-2 lines
-        tz = city_locale.timezone if city_locale else self._locale.timezone
-        time_str = _format_time_local(incident.earliest_report, tz)
+        # Use Discord's dynamic timestamp markup so each viewer sees their
+        # own local time instead of a fixed timezone string.
+        ts_early = int(incident.earliest_report.timestamp())
+        time_str = f"<t:{ts_early}:t>"
         if incident.earliest_report != incident.latest_report:
-            time_str += f" - {_format_time_local(incident.latest_report, tz)}"
+            ts_late = int(incident.latest_report.timestamp())
+            time_str += f" - <t:{ts_late}:t>"
 
         platform_names = sorted(
             SOURCE_LABELS.get(s, s) for s in incident.unique_source_types
@@ -166,10 +159,12 @@ class DiscordNotifier:
         new_reports = incident.new_reports or []
         conf = _confidence_emoji(incident.confidence_score)
 
+        ts_latest = int(incident.latest_report.timestamp())
         summary = (
             f"**{len(new_reports)} new source(s)** confirming earlier reports\n"
             f"Now at **{conf}** confidence | "
-            f"{incident.source_count} total reports"
+            f"{incident.source_count} total reports\n"
+            f"Latest report: <t:{ts_latest}:t>"
         )
         embed.set_description(summary)
 

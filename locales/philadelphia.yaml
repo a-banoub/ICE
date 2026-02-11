@@ -1,0 +1,114 @@
+# ============================================================
+# Philadelphia, PA — Locale Configuration
+# ============================================================
+
+name: philadelphia
+display_name: "Philadelphia Metro"
+timezone: America/New_York
+
+# ── Geographic center & radius ────────────────────────────────
+center:
+  lat: 39.9526
+  lon: -75.1652
+radius_km: 45.0
+
+# ── Fallback location strings ────────────────────────────────
+fallback_location: "Philadelphia area"
+fallback_location_unspecified: "Philadelphia (unspecified)"
+
+# ── Geodata files ─────────────────────────────────────────────
+neighborhoods_file: ""
+landmarks_file: ""
+
+# ── Geographic keywords ──────────────────────────────────────
+geo_keywords:
+  - philadelphia
+  - pennsylvania
+  - philadelphia county
+  - delaware county
+  - montgomery county
+  - metro philadelphia
+  - center city
+  - north philadelphia
+  - south philadelphia
+  - kensington
+  - fairhill
+  - hunting park
+  - olney
+  - frankford
+  - feltonville
+  - west philadelphia
+  - upper darby
+  - chester
+  - norristown
+  - camden
+  - cherry hill
+  - trenton
+  - phl airport
+  - temple university
+  - upenn
+
+geo_city_names:
+  - philadelphia
+  - pennsylvania
+  - pa
+  - philadelphia county
+  - delaware county
+  - montgomery county
+  - center city
+  - kensington
+  - fairhill
+  - hunting park
+  - olney
+  - frankford
+  - feltonville
+  - chester
+  - norristown
+  - camden
+  - cherry hill
+  - trenton
+
+# ── RSS feeds ────────────────────────────────────────────────
+rss_feeds: []
+
+# ── Reddit ───────────────────────────────────────────────────
+subreddits:
+  - philadelphia
+  - immigration
+
+# ── Bluesky ──────────────────────────────────────────────────
+bluesky:
+  search_queries:
+    - "ICE Philadelphia"
+    - "ICE Pennsylvania"
+    - "immigration raid Philadelphia"
+    - "deportation Pennsylvania"
+  monitored_accounts: []
+  trusted_accounts: []
+
+# ── Twitter/X ────────────────────────────────────────────────
+twitter:
+  search_queries:
+    - '(ICE OR "immigration enforcement") ("Philadelphia" OR "Philadelphia County") -is:retweet'
+    - '(ICE raid OR "ICE agents" OR deportation) Pennsylvania -is:retweet'
+    - '("federal agents" OR "unmarked van" OR "ICE sighting") "Philadelphia" -is:retweet'
+    - '(detained OR detention OR "immigration arrest") "Philadelphia" -is:retweet'
+  reporter_accounts: []
+  activist_accounts:
+    - UnitedWeDream
+    - ConMijente
+  news_accounts: []
+  official_accounts: []
+
+# ── Instagram ────────────────────────────────────────────────
+instagram:
+  monitored_accounts: []
+
+# ── Discord display ──────────────────────────────────────────
+discord:
+  bot_description: "Philadelphia ICE Activity Monitor"
+  footer_text: "Philadelphia ICE Monitor | Stay safe, know your rights"
+  subscribe_message: "ICE activity is reported in the Philadelphia area"
+  help_description: >-
+    This bot monitors multiple sources for ICE enforcement activity
+    in the Philadelphia metro area and sends alerts to subscribed channels.

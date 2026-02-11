@@ -1,0 +1,122 @@
+# ============================================================
+# Detroit, MI — Locale Configuration
+# ============================================================
+
+name: detroit
+display_name: "Detroit Metro"
+timezone: America/Detroit
+
+# ── Geographic center & radius ────────────────────────────────
+center:
+  lat: 42.3314
+  lon: -83.0458
+radius_km: 50.0
+
+# ── Fallback location strings ────────────────────────────────
+fallback_location: "Detroit area"
+fallback_location_unspecified: "Detroit (unspecified)"
+
+# ── Geodata files ─────────────────────────────────────────────
+neighborhoods_file: ""
+landmarks_file: ""
+
+# ── Geographic keywords ──────────────────────────────────────
+geo_keywords:
+  - detroit
+  - michigan
+  - wayne county
+  - oakland county
+  - macomb county
+  - metro detroit
+  - downtown detroit
+  - southwest detroit
+  - mexicantown
+  - corktown
+  - hamtramck
+  - dearborn
+  - dearborn heights
+  - lincoln park
+  - ecorse
+  - river rouge
+  - pontiac
+  - sterling heights
+  - warren
+  - southgate
+  - taylor
+  - westland
+  - canton
+  - ypsilanti
+  - detroit metro airport
+  - ambassador bridge
+  - detroit-windsor tunnel
+  - wayne state
+
+geo_city_names:
+  - detroit
+  - michigan
+  - mi
+  - wayne county
+  - oakland county
+  - macomb county
+  - southwest detroit
+  - mexicantown
+  - corktown
+  - hamtramck
+  - dearborn
+  - dearborn heights
+  - lincoln park
+  - ecorse
+  - river rouge
+  - pontiac
+  - sterling heights
+  - warren
+  - southgate
+  - taylor
+  - westland
+  - canton
+  - ypsilanti
+
+# ── RSS feeds ────────────────────────────────────────────────
+rss_feeds: []
+
+# ── Reddit ───────────────────────────────────────────────────
+subreddits:
+  - Detroit
+  - immigration
+
+# ── Bluesky ──────────────────────────────────────────────────
+bluesky:
+  search_queries:
+    - "ICE Detroit"
+    - "ICE Michigan"
+    - "immigration raid Detroit"
+    - "deportation Michigan"
+  monitored_accounts: []
+  trusted_accounts: []
+
+# ── Twitter/X ────────────────────────────────────────────────
+twitter:
+  search_queries:
+    - '(ICE OR "immigration enforcement") ("Detroit" OR "Wayne County") -is:retweet'
+    - '(ICE raid OR "ICE agents" OR deportation) Michigan -is:retweet'
+    - '("federal agents" OR "unmarked van" OR "ICE sighting") "Detroit" -is:retweet'
+    - '(detained OR detention OR "immigration arrest") "Detroit" -is:retweet'
+  reporter_accounts: []
+  activist_accounts:
+    - UnitedWeDream
+    - ConMijente
+  news_accounts: []
+  official_accounts: []
+
+# ── Instagram ────────────────────────────────────────────────
+instagram:
+  monitored_accounts: []
+
+# ── Discord display ──────────────────────────────────────────
+discord:
+  bot_description: "Detroit ICE Activity Monitor"
+  footer_text: "Detroit ICE Monitor | Stay safe, know your rights"
+  subscribe_message: "ICE activity is reported in the Detroit area"
+  help_description: >-
+    This bot monitors multiple sources for ICE enforcement activity
+    in the Detroit metro area and sends alerts to subscribed channels.

@@ -1,0 +1,114 @@
+# ============================================================
+# El Paso, TX — Locale Configuration
+# ============================================================
+
+name: elpaso
+display_name: "El Paso Metro"
+timezone: America/Denver
+
+# ── Geographic center & radius ────────────────────────────────
+center:
+  lat: 31.7619
+  lon: -106.485
+radius_km: 45.0
+
+# ── Fallback location strings ────────────────────────────────
+fallback_location: "El Paso area"
+fallback_location_unspecified: "El Paso (unspecified)"
+
+# ── Geodata files ─────────────────────────────────────────────
+neighborhoods_file: ""
+landmarks_file: ""
+
+# ── Geographic keywords ──────────────────────────────────────
+geo_keywords:
+  - el paso
+  - elpaso
+  - texas
+  - el paso county
+  - metro el paso
+  - downtown el paso
+  - segundo barrio
+  - chihuahuita
+  - central el paso
+  - lower valley
+  - upper valley
+  - northeast el paso
+  - eastside
+  - mission valley
+  - socorro
+  - horizon city
+  - canutillo
+  - sunland park
+  - anthony
+  - clint
+  - fabens
+  - el paso airport
+  - bridge of the americas
+  - paso del norte bridge
+  - ysleta port of entry
+  - utep
+  - fort bliss
+
+geo_city_names:
+  - el paso
+  - elpaso
+  - texas
+  - tx
+  - el paso county
+  - segundo barrio
+  - chihuahuita
+  - eastside
+  - mission valley
+  - socorro
+  - horizon city
+  - canutillo
+  - sunland park
+  - anthony
+  - clint
+  - fabens
+
+# ── RSS feeds ────────────────────────────────────────────────
+rss_feeds: []
+
+# ── Reddit ───────────────────────────────────────────────────
+subreddits:
+  - ElPaso
+  - immigration
+
+# ── Bluesky ──────────────────────────────────────────────────
+bluesky:
+  search_queries:
+    - "ICE El Paso"
+    - "ICE Texas"
+    - "immigration raid El Paso"
+    - "deportation Texas"
+  monitored_accounts: []
+  trusted_accounts: []
+
+# ── Twitter/X ────────────────────────────────────────────────
+twitter:
+  search_queries:
+    - '(ICE OR "immigration enforcement") ("El Paso" OR "El Paso County") -is:retweet'
+    - '(ICE raid OR "ICE agents" OR deportation) Texas -is:retweet'
+    - '("federal agents" OR "unmarked van" OR "ICE sighting") "El Paso" -is:retweet'
+    - '(detained OR detention OR "immigration arrest") "El Paso" -is:retweet'
+  reporter_accounts: []
+  activist_accounts:
+    - UnitedWeDream
+    - ConMijente
+  news_accounts: []
+  official_accounts: []
+
+# ── Instagram ────────────────────────────────────────────────
+instagram:
+  monitored_accounts: []
+
+# ── Discord display ──────────────────────────────────────────
+discord:
+  bot_description: "El Paso ICE Activity Monitor"
+  footer_text: "El Paso ICE Monitor | Stay safe, know your rights"
+  subscribe_message: "ICE activity is reported in the El Paso area"
+  help_description: >-
+    This bot monitors multiple sources for ICE enforcement activity
+    in the El Paso metro area and sends alerts to subscribed channels.

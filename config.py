@@ -34,13 +34,6 @@ class Config:
     discord_bot_token: str = ""        # For bot mode (publishable)
     discord_bot_client_id: str = ""    # For generating invite URL
 
-    # Twitter/X
-    twitter_enabled: bool = False
-    twitter_username: str = ""
-    twitter_password: str = ""
-    twitter_poll_interval: int = 120
-
-
     # Reddit
     reddit_client_id: str = ""
     reddit_client_secret: str = ""
@@ -63,10 +56,6 @@ class Config:
     # StopICE.net
     stopice_enabled: bool = True
     stopice_poll_interval: int = 1800  # 30 minutes (data updates nightly)
-
-    # Instagram
-    instagram_enabled: bool = True
-    instagram_poll_interval: int = 300  # 5 minutes (strict rate limits)
 
     # Geographic filtering — read from locale, can be overridden via env
     mpls_center_lat: float = 0.0
@@ -129,10 +118,6 @@ def load_config() -> Config:
         discord_webhook_url=os.getenv("DISCORD_WEBHOOK_URL", ""),
         discord_bot_token=os.getenv("DISCORD_BOT_TOKEN", ""),
         discord_bot_client_id=os.getenv("DISCORD_BOT_CLIENT_ID", ""),
-        twitter_enabled=_get_bool("TWITTER_ENABLED"),
-        twitter_username=os.getenv("TWITTER_USERNAME", ""),
-        twitter_password=os.getenv("TWITTER_PASSWORD", ""),
-        twitter_poll_interval=_get_int("TWITTER_POLL_INTERVAL", 120),
         reddit_client_id=os.getenv("REDDIT_CLIENT_ID", ""),
         reddit_client_secret=os.getenv("REDDIT_CLIENT_SECRET", ""),
         reddit_user_agent=os.getenv("REDDIT_USER_AGENT", "ice-monitor:v0.1"),
@@ -146,8 +131,6 @@ def load_config() -> Config:
         bluesky_poll_interval=_get_int("BLUESKY_POLL_INTERVAL", 120),
         stopice_enabled=_get_bool("STOPICE_ENABLED", True),
         stopice_poll_interval=_get_int("STOPICE_POLL_INTERVAL", 1800),
-        instagram_enabled=_get_bool("INSTAGRAM_ENABLED", True),
-        instagram_poll_interval=_get_int("INSTAGRAM_POLL_INTERVAL", 300),
         mpls_center_lat=_get_float("CENTER_LAT", locale.center_lat),
         mpls_center_lon=_get_float("CENTER_LON", locale.center_lon),
         max_distance_km=_get_float("MAX_DISTANCE_KM", locale.radius_km),

@@ -1,0 +1,122 @@
+# ============================================================
+# Newark, NJ — Locale Configuration
+# ============================================================
+
+name: newark
+display_name: "Newark / North Jersey"
+timezone: America/New_York
+
+# ── Geographic center & radius ────────────────────────────────
+center:
+  lat: 40.7357
+  lon: -74.1724
+radius_km: 40.0
+
+# ── Fallback location strings ────────────────────────────────
+fallback_location: "Newark area"
+fallback_location_unspecified: "Newark (unspecified)"
+
+# ── Geodata files ─────────────────────────────────────────────
+neighborhoods_file: ""
+landmarks_file: ""
+
+# ── Geographic keywords ──────────────────────────────────────
+geo_keywords:
+  - newark
+  - new jersey
+  - essex county
+  - hudson county
+  - passaic county
+  - bergen county
+  - metro newark
+  - downtown newark
+  - ironbound
+  - north ward
+  - east ward
+  - south ward
+  - west ward
+  - central ward
+  - jersey city
+  - elizabeth
+  - paterson
+  - passaic
+  - union city
+  - west new york
+  - north bergen
+  - hackensack
+  - garfield
+  - clifton
+  - east orange
+  - irvington
+  - bloomfield
+  - belleville
+  - newark airport
+  - ewr
+  - rutgers newark
+  - njit
+
+geo_city_names:
+  - newark
+  - new jersey
+  - nj
+  - essex county
+  - hudson county
+  - passaic county
+  - bergen county
+  - ironbound
+  - jersey city
+  - elizabeth
+  - paterson
+  - passaic
+  - union city
+  - hackensack
+  - garfield
+  - clifton
+  - irvington
+  - bloomfield
+  - belleville
+
+# ── RSS feeds ────────────────────────────────────────────────
+rss_feeds: []
+
+# ── Reddit ───────────────────────────────────────────────────
+subreddits:
+  - newjersey
+  - immigration
+
+# ── Bluesky ──────────────────────────────────────────────────
+bluesky:
+  search_queries:
+    - "ICE Newark"
+    - "ICE New Jersey"
+    - "immigration raid Newark"
+    - "deportation New Jersey"
+  monitored_accounts: []
+  trusted_accounts: []
+
+# ── Twitter/X ────────────────────────────────────────────────
+twitter:
+  search_queries:
+    - '(ICE OR "immigration enforcement") ("Newark" OR "Essex County") -is:retweet'
+    - '(ICE raid OR "ICE agents" OR deportation) New Jersey -is:retweet'
+    - '("federal agents" OR "unmarked van" OR "ICE sighting") "Newark" -is:retweet'
+    - '(detained OR detention OR "immigration arrest") "Newark" -is:retweet'
+  reporter_accounts: []
+  activist_accounts:
+    - UnitedWeDream
+    - ConMijente
+  news_accounts: []
+  official_accounts: []
+
+# ── Instagram ────────────────────────────────────────────────
+instagram:
+  monitored_accounts: []
+
+# ── Discord display ──────────────────────────────────────────
+discord:
+  bot_description: "Newark ICE Activity Monitor"
+  footer_text: "Newark ICE Monitor | Stay safe, know your rights"
+  subscribe_message: "ICE activity is reported in the Newark area"
+  help_description: >-
+    This bot monitors multiple sources for ICE enforcement activity
+    in the Newark metro area and sends alerts to subscribed channels.

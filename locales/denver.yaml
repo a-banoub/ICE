@@ -1,0 +1,125 @@
+# ============================================================
+# Denver, CO — Locale Configuration
+# ============================================================
+
+name: denver
+display_name: "Denver Metro"
+timezone: America/Denver
+
+# ── Geographic center & radius ────────────────────────────────
+center:
+  lat: 39.7392
+  lon: -104.9903
+radius_km: 50.0
+
+# ── Fallback location strings ────────────────────────────────
+fallback_location: "Denver area"
+fallback_location_unspecified: "Denver (unspecified)"
+
+# ── Geodata files ─────────────────────────────────────────────
+neighborhoods_file: ""
+landmarks_file: ""
+
+# ── Geographic keywords ──────────────────────────────────────
+geo_keywords:
+  - denver
+  - colorado
+  - denver county
+  - adams county
+  - arapahoe county
+  - jefferson county
+  - metro denver
+  - downtown denver
+  - five points
+  - globeville
+  - elyria-swansea
+  - sun valley
+  - westwood
+  - barnum
+  - federal boulevard
+  - aurora
+  - lakewood
+  - arvada
+  - westminster
+  - thornton
+  - northglenn
+  - commerce city
+  - brighton
+  - englewood
+  - littleton
+  - centennial
+  - dia
+  - denver international airport
+  - coors field
+
+geo_city_names:
+  - denver
+  - colorado
+  - co
+  - denver county
+  - adams county
+  - arapahoe county
+  - jefferson county
+  - five points
+  - globeville
+  - elyria-swansea
+  - sun valley
+  - westwood
+  - barnum
+  - federal boulevard
+  - aurora
+  - lakewood
+  - arvada
+  - westminster
+  - thornton
+  - northglenn
+  - commerce city
+  - brighton
+  - englewood
+  - littleton
+  - centennial
+
+# ── RSS feeds ────────────────────────────────────────────────
+rss_feeds: []
+
+# ── Reddit ───────────────────────────────────────────────────
+subreddits:
+  - Denver
+  - immigration
+
+# ── Bluesky ──────────────────────────────────────────────────
+bluesky:
+  search_queries:
+    - "ICE Denver"
+    - "ICE Colorado"
+    - "immigration raid Denver"
+    - "deportation Colorado"
+  monitored_accounts: []
+  trusted_accounts: []
+
+# ── Twitter/X ────────────────────────────────────────────────
+twitter:
+  search_queries:
+    - '(ICE OR "immigration enforcement") ("Denver" OR "Denver County") -is:retweet'
+    - '(ICE raid OR "ICE agents" OR deportation) Colorado -is:retweet'
+    - '("federal agents" OR "unmarked van" OR "ICE sighting") "Denver" -is:retweet'
+    - '(detained OR detention OR "immigration arrest") "Denver" -is:retweet'
+  reporter_accounts: []
+  activist_accounts:
+    - UnitedWeDream
+    - ConMijente
+  news_accounts: []
+  official_accounts: []
+
+# ── Instagram ────────────────────────────────────────────────
+instagram:
+  monitored_accounts: []
+
+# ── Discord display ──────────────────────────────────────────
+discord:
+  bot_description: "Denver ICE Activity Monitor"
+  footer_text: "Denver ICE Monitor | Stay safe, know your rights"
+  subscribe_message: "ICE activity is reported in the Denver area"
+  help_description: >-
+    This bot monitors multiple sources for ICE enforcement activity
+    in the Denver metro area and sends alerts to subscribed channels.

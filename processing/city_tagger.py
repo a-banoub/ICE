@@ -2,12 +2,13 @@
 
 Given a report's text and optional coordinates, matches it to the best-fit
 city from the loaded locales.  Coordinates are checked first (most precise),
-then keyword match count is used as a fallback.
+then regex match count is used as a fallback.
 """
 
 from __future__ import annotations
 
 import logging
+import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -22,11 +23,11 @@ class CityTagger:
     """Determines which city a report belongs to."""
 
     def __init__(self, city_locales: dict[str, Locale]):
-        self._city_keywords: dict[str, set[str]] = {}
+        self._city_regex: dict[str, re.Pattern[str]] = {}
         self._city_centers: dict[str, list[tuple[float, float, float]]] = {}
 
         for name, locale in city_locales.items():
-            self._city_keywords[name] = {str(kw).lower() for kw in locale.geo_keywords}
+            self._city_regex[name] = locale.build_geo_regex()
             self._city_centers[name] = list(locale.centers)
 
         logger.info(
@@ -49,12 +50,12 @@ class CityTagger:
                     if haversine_km(lat, lon, c_lat, c_lon) <= c_radius:
                         return name
 
-        # Priority 2: keyword match count
-        text_lower = text.lower()
+        # Priority 2: regex match count (uses pre-compiled geo regex per city)
         best_city = ""
         best_count = 0
-        for name, keywords in self._city_keywords.items():
-            count = sum(1 for kw in keywords if kw in text_lower)
+        for name, pattern in self._city_regex.items():
+            matches = pattern.findall(text)
+            count = len(matches)
             if count > best_count:
                 best_count = count
                 best_city = name

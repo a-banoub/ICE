@@ -1,0 +1,133 @@
+# ============================================================
+# Houston, TX — Locale Configuration
+# ============================================================
+
+name: houston
+display_name: "Houston Metro"
+timezone: America/Chicago
+
+# ── Geographic center & radius ────────────────────────────────
+center:
+  lat: 29.7604
+  lon: -95.3698
+radius_km: 60.0
+
+# ── Fallback location strings ────────────────────────────────
+fallback_location: "Houston area"
+fallback_location_unspecified: "Houston (unspecified)"
+
+# ── Geodata files ─────────────────────────────────────────────
+neighborhoods_file: ""
+landmarks_file: ""
+
+# ── Geographic keywords ──────────────────────────────────────
+geo_keywords:
+  - houston
+  - texas
+  - harris county
+  - fort bend county
+  - montgomery county
+  - metro houston
+  - downtown houston
+  - midtown houston
+  - montrose
+  - heights
+  - east end
+  - gulfton
+  - sharpstown
+  - alief
+  - spring branch
+  - greenspoint
+  - pasadena
+  - baytown
+  - sugar land
+  - katy
+  - humble
+  - channelview
+  - galena park
+  - jacinto city
+  - south houston
+  - missouri city
+  - pearland
+  - league city
+  - magnolia park
+  - denver harbor
+  - second ward
+  - george bush iah
+  - hobby airport
+  - galleria
+
+geo_city_names:
+  - houston
+  - texas
+  - tx
+  - harris county
+  - fort bend county
+  - montgomery county
+  - midtown houston
+  - montrose
+  - heights
+  - gulfton
+  - sharpstown
+  - alief
+  - spring branch
+  - greenspoint
+  - pasadena
+  - baytown
+  - sugar land
+  - katy
+  - humble
+  - channelview
+  - galena park
+  - jacinto city
+  - missouri city
+  - pearland
+  - league city
+  - magnolia park
+  - denver harbor
+  - second ward
+
+# ── RSS feeds ────────────────────────────────────────────────
+rss_feeds: []
+
+# ── Reddit ───────────────────────────────────────────────────
+subreddits:
+  - houston
+  - immigration
+
+# ── Bluesky ──────────────────────────────────────────────────
+bluesky:
+  search_queries:
+    - "ICE Houston"
+    - "ICE Texas"
+    - "immigration raid Houston"
+    - "deportation Texas"
+  monitored_accounts: []
+  trusted_accounts: []
+
+# ── Twitter/X ────────────────────────────────────────────────
+twitter:
+  search_queries:
+    - '(ICE OR "immigration enforcement") ("Houston" OR "Harris County") -is:retweet'
+    - '(ICE raid OR "ICE agents" OR deportation) Texas -is:retweet'
+    - '("federal agents" OR "unmarked van" OR "ICE sighting") "Houston" -is:retweet'
+    - '(detained OR detention OR "immigration arrest") "Houston" -is:retweet'
+  reporter_accounts: []
+  activist_accounts:
+    - UnitedWeDream
+    - ConMijente
+  news_accounts: []
+  official_accounts: []
+
+# ── Instagram ────────────────────────────────────────────────
+instagram:
+  monitored_accounts: []
+
+# ── Discord display ──────────────────────────────────────────
+discord:
+  bot_description: "Houston ICE Activity Monitor"
+  footer_text: "Houston ICE Monitor | Stay safe, know your rights"
+  subscribe_message: "ICE activity is reported in the Houston area"
+  help_description: >-
+    This bot monitors multiple sources for ICE enforcement activity
+    in the Houston metro area and sends alerts to subscribed channels.

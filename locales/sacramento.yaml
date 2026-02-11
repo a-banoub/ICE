@@ -1,0 +1,116 @@
+# ============================================================
+# Sacramento, CA — Locale Configuration
+# ============================================================
+
+name: sacramento
+display_name: "Sacramento Metro"
+timezone: America/Los_Angeles
+
+# ── Geographic center & radius ────────────────────────────────
+center:
+  lat: 38.5816
+  lon: -121.4944
+radius_km: 45.0
+
+# ── Fallback location strings ────────────────────────────────
+fallback_location: "Sacramento area"
+fallback_location_unspecified: "Sacramento (unspecified)"
+
+# ── Geodata files ─────────────────────────────────────────────
+neighborhoods_file: ""
+landmarks_file: ""
+
+# ── Geographic keywords ──────────────────────────────────────
+geo_keywords:
+  - sacramento
+  - california
+  - sacramento county
+  - yolo county
+  - placer county
+  - metro sacramento
+  - downtown sacramento
+  - midtown sacramento
+  - oak park
+  - del paso heights
+  - north sacramento
+  - south sacramento
+  - meadowview
+  - fruitridge
+  - elk grove
+  - rancho cordova
+  - citrus heights
+  - roseville
+  - folsom
+  - davis
+  - woodland
+  - west sacramento
+  - arden-arcade
+  - sacramento airport
+  - uc davis
+  - sac state
+
+geo_city_names:
+  - sacramento
+  - california
+  - ca
+  - sacramento county
+  - yolo county
+  - placer county
+  - midtown sacramento
+  - oak park
+  - del paso heights
+  - meadowview
+  - fruitridge
+  - elk grove
+  - rancho cordova
+  - citrus heights
+  - roseville
+  - folsom
+  - davis
+  - woodland
+  - arden-arcade
+
+# ── RSS feeds ────────────────────────────────────────────────
+rss_feeds: []
+
+# ── Reddit ───────────────────────────────────────────────────
+subreddits:
+  - Sacramento
+  - immigration
+
+# ── Bluesky ──────────────────────────────────────────────────
+bluesky:
+  search_queries:
+    - "ICE Sacramento"
+    - "ICE California"
+    - "immigration raid Sacramento"
+    - "deportation California"
+  monitored_accounts: []
+  trusted_accounts: []
+
+# ── Twitter/X ────────────────────────────────────────────────
+twitter:
+  search_queries:
+    - '(ICE OR "immigration enforcement") ("Sacramento" OR "Sacramento County") -is:retweet'
+    - '(ICE raid OR "ICE agents" OR deportation) California -is:retweet'
+    - '("federal agents" OR "unmarked van" OR "ICE sighting") "Sacramento" -is:retweet'
+    - '(detained OR detention OR "immigration arrest") "Sacramento" -is:retweet'
+  reporter_accounts: []
+  activist_accounts:
+    - UnitedWeDream
+    - ConMijente
+  news_accounts: []
+  official_accounts: []
+
+# ── Instagram ────────────────────────────────────────────────
+instagram:
+  monitored_accounts: []
+
+# ── Discord display ──────────────────────────────────────────
+discord:
+  bot_description: "Sacramento ICE Activity Monitor"
+  footer_text: "Sacramento ICE Monitor | Stay safe, know your rights"
+  subscribe_message: "ICE activity is reported in the Sacramento area"
+  help_description: >-
+    This bot monitors multiple sources for ICE enforcement activity
+    in the Sacramento metro area and sends alerts to subscribed channels.
