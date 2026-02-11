@@ -28,6 +28,7 @@ class Config:
     # Per-city locale objects for city tagging and display
     city_locales: dict = field(default_factory=dict)
     available_cities: tuple = ()
+    city_display_names: dict = field(default_factory=dict)
 
     # Discord - supports both webhook (single channel) and bot (multi-server) modes
     discord_webhook_url: str = ""      # For webhook mode (original)
@@ -96,6 +97,7 @@ def load_config() -> Config:
         city_locales, locale = load_all_locales()
 
     available_cities = tuple(sorted(city_locales.keys()))
+    city_display_names = {key: loc.display_name for key, loc in city_locales.items()}
 
     reddit_subs_raw = os.getenv("REDDIT_SUBREDDITS", "")
     reddit_subs = (
@@ -115,6 +117,7 @@ def load_config() -> Config:
         locale=locale,
         city_locales=city_locales,
         available_cities=available_cities,
+        city_display_names=city_display_names,
         discord_webhook_url=os.getenv("DISCORD_WEBHOOK_URL", ""),
         discord_bot_token=os.getenv("DISCORD_BOT_TOKEN", ""),
         discord_bot_client_id=os.getenv("DISCORD_BOT_CLIENT_ID", ""),

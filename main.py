@@ -425,7 +425,7 @@ class ICEMonitor:
                 from notifications.discord_bot import ICEAlertBot, _set_bot_instance
                 self._bot = ICEAlertBot(
                     self.config.discord_bot_token,
-                    available_cities=list(self.config.available_cities),
+                    city_display_names=self.config.city_display_names,
                 )
                 _set_bot_instance(self._bot)
                 logger.info("Discord bot initialized, starting in background...")

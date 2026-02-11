@@ -79,7 +79,7 @@ class DiscordNotifier:
         city_locale = self._city_locales.get(incident.city) if incident.city else None
         fallback = city_locale.fallback_location if city_locale else self._locale.fallback_location
         location = incident.primary_location or fallback
-        city_label = incident.city.title() if incident.city else ""
+        city_label = (city_locale.display_name if city_locale else incident.city) if incident.city else ""
         title = f"ICE ACTIVITY: {location}"
         if city_label and city_label.lower() not in location.lower():
             title += f" ({city_label})"
@@ -146,7 +146,7 @@ class DiscordNotifier:
         city_locale = self._city_locales.get(incident.city) if incident.city else None
         fallback = city_locale.fallback_location if city_locale else self._locale.fallback_location
         location = incident.primary_location or fallback
-        city_label = incident.city.title() if incident.city else ""
+        city_label = (city_locale.display_name if city_locale else incident.city) if incident.city else ""
         title = f"UPDATE: {location}"
         if city_label and city_label.lower() not in location.lower():
             title += f" ({city_label})"
