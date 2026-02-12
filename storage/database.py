@@ -170,7 +170,8 @@ class Database:
                WHERE is_relevant = 1
                  AND expired = 0
                  AND collected_at >= ?
-               ORDER BY timestamp ASC""",
+               ORDER BY timestamp DESC
+               LIMIT 500""",
             (since.isoformat(),),
         )
         rows = await cursor.fetchall()
@@ -318,24 +319,21 @@ class Database:
         return [dict(row) for row in rows]
 
     async def expire_old_clusters(self, max_age_hours: float = 6.0) -> int:
-        """Mark clusters older than max_age_hours as no longer active.
+        """Delete clusters older than max_age_hours.
 
-        This stops them from receiving update notifications.
-        Returns count of expired clusters.
+        Frees memory and keeps the clusters table from growing unboundedly.
+        Returns count of deleted clusters.
         """
         from datetime import timedelta
         cutoff = (datetime.now(timezone.utc) - timedelta(hours=max_age_hours)).isoformat()
 
-        # We don't have an 'active' column, but we can use latest_report
-        # to filter. The get_active_clusters query already handles this.
-        # For explicit tracking, let's just log how many would be expired.
         cursor = await self._db.execute(
-            """SELECT COUNT(*) as cnt FROM clusters
+            """DELETE FROM clusters
                WHERE notified = 1 AND latest_report < ?""",
             (cutoff,),
         )
-        row = await cursor.fetchone()
-        return row["cnt"] if row else 0
+        await self._db.commit()
+        return cursor.rowcount
 
     async def update_cluster(
         self,
@@ -388,4 +386,6 @@ class Database:
             "DELETE FROM notifications WHERE sent_at < ?", (cutoff,)
         )
         await self._db.commit()
-        logger.info("Purged data older than %d days", days)
+        # Reclaim disk space and reduce memory footprint
+        await self._db.execute("VACUUM")
+        logger.info("Purged data older than %d days and vacuumed DB", days)

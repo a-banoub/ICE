@@ -20,6 +20,7 @@ class BaseCollector(ABC):
     """
 
     name: str = "base"
+    _collect_timeout: float = 120.0  # seconds; subclasses can override
 
     def __init__(self, config: Config, report_queue: asyncio.Queue):
         self.config = config
@@ -73,12 +74,13 @@ class BaseCollector(ABC):
                 # Wrap collect() in a timeout so no collector can hang forever
                 try:
                     reports = await asyncio.wait_for(
-                        self.collect(), timeout=120.0
+                        self.collect(), timeout=self._collect_timeout
                     )
                 except asyncio.TimeoutError:
                     logger.error(
-                        "[%s] collect() timed out after 120s, skipping cycle",
+                        "[%s] collect() timed out after %ds, skipping cycle",
                         self.name,
+                        int(self._collect_timeout),
                     )
                     reports = []
 

@@ -274,10 +274,23 @@ class ICEMonitor:
         MAX_PER_WINDOW = 10
         WINDOW_SECONDS = 600  # 10 minutes
         _recent_sends: list[datetime] = []
+        _cycle_count = 0
 
         while not self._shutdown_event.is_set():
             try:
                 await asyncio.sleep(self.config.correlation_check_interval)
+                _cycle_count += 1
+
+                # Log memory usage every 10 cycles (~10 min) for leak tracking
+                if _cycle_count % 10 == 0:
+                    try:
+                        with open("/proc/self/status") as f:
+                            for line in f:
+                                if line.startswith("VmRSS:"):
+                                    logger.info("Memory RSS: %s", line.strip())
+                                    break
+                    except (FileNotFoundError, OSError):
+                        pass  # Not on Linux
 
                 incidents = await self.correlator.run_cycle()
                 if not incidents:
@@ -357,13 +370,18 @@ class ICEMonitor:
                         if sent_count < cycle_limit:
                             await asyncio.sleep(2)
 
-                # Expire old uncorroborated reports
+                # Expire old uncorroborated reports and stale clusters
                 expiry_cutoff = datetime.now(timezone.utc) - timedelta(
                     seconds=self.config.correlation_window_seconds
                 )
                 expired_count = await self.db.expire_old_reports(expiry_cutoff)
                 if expired_count:
                     logger.debug("Expired %d uncorroborated reports", expired_count)
+                deleted_clusters = await self.db.expire_old_clusters(
+                    self.config.cluster_expiry_hours
+                )
+                if deleted_clusters:
+                    logger.info("Deleted %d expired clusters", deleted_clusters)
 
             except asyncio.CancelledError:
                 break
@@ -371,10 +389,10 @@ class ICEMonitor:
                 logger.exception("Error in correlation loop")
 
     async def _daily_cleanup(self) -> None:
-        """Purge old data once per day."""
+        """Purge old data periodically."""
         while not self._shutdown_event.is_set():
             try:
-                await asyncio.sleep(86400)  # 24 hours
+                await asyncio.sleep(14400)  # 4 hours
                 await self.db.purge_old_data(days=7)
             except asyncio.CancelledError:
                 break

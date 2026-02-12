@@ -107,6 +107,7 @@ class IceoutCollector(BaseCollector):
     """
 
     name = "iceout"
+    _collect_timeout = 60.0  # Browser nav + Altcha + fetch needs more than default
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -365,20 +366,17 @@ class IceoutCollector(BaseCollector):
         self._authenticated = False
 
     def get_poll_interval(self) -> int:
-        return self.config.iceout_poll_interval
+        base = self.config.iceout_poll_interval
+        if self._consecutive_failures >= 3:
+            # Backoff via longer poll interval — NOT inside collect()
+            # (sleeping inside collect() eats into base.py's 120s timeout
+            #  and creates an unrecoverable death spiral)
+            extra = min(self._consecutive_failures * 30, 300)
+            return base + extra
+        return base
 
     async def collect(self) -> list[RawReport]:
         logger.info("[iceout] Starting collection cycle (failures=%d)", self._consecutive_failures)
-
-        # Exponential backoff on consecutive failures — don't hammer iceout.org
-        if self._consecutive_failures >= 3:
-            backoff_seconds = min(self._consecutive_failures * 30, 300)
-            logger.warning(
-                "[iceout] Backing off %ds due to %d consecutive failures",
-                backoff_seconds,
-                self._consecutive_failures,
-            )
-            await asyncio.sleep(backoff_seconds)
 
         # Wrap entire collection in a timeout to prevent indefinite hangs
         try:

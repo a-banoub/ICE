@@ -40,6 +40,9 @@ _BROWSER_ARGS: list[str] = [
     "--metrics-recording-only",
     "--no-first-run",
     "--disable-default-apps",
+    # Memory limits for 1GB server
+    "--js-flags=--max-old-space-size=128",
+    "--renderer-process-limit=1",
 ]
 
 
